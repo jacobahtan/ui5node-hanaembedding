@@ -29,23 +29,24 @@
 						<OverflowToolbarLayoutData priority="Disappear"/>
 					</layoutData>
 				</Title>
-				<Text text="Talk to your Business with Generative AI – from advanced grounding techniques to Joule extensibility" wrapping="false" id="secondTitle">
+				<Text text="" wrapping="false" id="secondTitle">
 					<layoutData>
 						<OverflowToolbarLayoutData priority="Disappear"/>
 					</layoutData>
 				</Text>
 				<ToolbarSpacer />
-				<SearchField width="16rem" id="searchField">
+				<!-- <SearchField width="16rem" id="searchField">
 					<layoutData>
 						<OverflowToolbarLayoutData priority="Low" group="1"/>
 					</layoutData>
 				</SearchField>
+				 -->
 				<ToolbarSpacer id="spacer">
 					<layoutData>
 						<OverflowToolbarLayoutData priority="Low" group="1"/>
 					</layoutData>
 				</ToolbarSpacer>
-				<Button visible="false" icon="sap-icon://search" type="Transparent" id="searchButton" tooltip="Search"/>
+				<!-- <Button visible="false" icon="sap-icon://search" type="Transparent" id="searchButton" tooltip="Search"/>
 				<OverflowToolbarButton icon="sap-icon://source-code" type="Transparent" tooltip="Action 1" text="Action 1">
 					<layoutData>
 						<OverflowToolbarLayoutData group="2"/>
@@ -66,7 +67,7 @@
 					<layoutData>
 						<OverflowToolbarLayoutData priority="NeverOverflow"/>
 					</layoutData>
-				</Button>
+				</Button> -->
 				<tnt:ToolHeaderUtilitySeparator/>
 				<ToolbarSpacer width="1.125rem"/>
 				<Avatar src="sap-icon://user" displaySize="XS" tooltip="Profile">
@@ -76,7 +77,7 @@
 				</Avatar>
 			</tnt:ToolHeader>
 		</tnt:header>
-		<tnt:subHeader>
+		<!-- <tnt:subHeader>
 			<tnt:ToolHeader visible="{=! ${device>/system/phone}}">
 				<IconTabHeader
 						selectedKey="{nav>/selectedKey}"
@@ -105,11 +106,12 @@
 					</items>
 				</IconTabHeader>
 			</tnt:ToolHeader>
-		</tnt:subHeader>
+		</tnt:subHeader> -->
 		<tnt:sideContent>
 			<tnt:SideNavigation
+				id="sideNavigation"
 				visible="{= ${device>/system/phone}}"
-				expanded="true"
+				expanded="false"
 				selectedKey="{nav>/selectedKey}"
 				itemSelect=".onItemSelect">
 				<tnt:NavigationList items="{path: 'nav>/navigation'}">
@@ -117,21 +119,237 @@
 						text="{nav>title}"
 						icon="{nav>icon}"
 						enabled="{nav>enabled}"
-						expanded="{nav>expanded}"
+						visible="{nav>visible}"
+						expanded="false"
 						items="{nav>items}"
 						key="{nav>key}">
 						<tnt:NavigationListItem
 							text="{nav>title}"
 							key="{nav>key}"
-							enabled="{nav>enabled}" />
+							enabled="{nav>enabled}"
+							visible="{nav>visible}" />
 					</tnt:NavigationListItem>
 				</tnt:NavigationList>
 			</tnt:SideNavigation>
 		</tnt:sideContent>
 		<tnt:mainContents>
-			<NavContainer id="pageContainer" initialPage="page2">
+			<NavContainer id="pageContainer" initialPage="page1">
 				<pages>
-					<Page id="page1" floatingFooter="false" busy="{ui>/busy}" busyIndicatorDelay="0">
+					<Page id="page1" showHeader="false" busy="{ui>/busy}" busyIndicatorDelay="0">
+                        <headerContent>
+                            <!-- <Title text="SAGenAICity - AskTheCity Chatbot  🤖" class="sapUiSmallMargin"/> -->
+                            <ToolbarSpacer />
+                        </headerContent>
+                        <content>
+							<IllustratedMessage 
+								enableVerticalResponsiveness="true"
+								title="Good day! How may I assist you today?"
+								description="Looks like your tasks list are all cleared!"
+								illustrationType="sapIllus-BalloonSky" />
+                        </content>
+                        <footer>
+                            <OverflowToolbar height="auto" width="100%">
+                                <ToolbarSpacer />
+
+                                <ToolbarSpacer />
+                            </OverflowToolbar>
+                        </footer>
+                    </Page>
+					<Page id="page2" floatingFooter="false" busy="{ui>/busy}" busyIndicatorDelay="0">
+						<!-- <IllustratedMessage
+							id="im"
+							illustrationSize="Auto"
+							illustrationType="sapIllus-SearchEarth">
+							<additionalContent>
+								<Button text="Action (optional)" />
+							</additionalContent>
+						</IllustratedMessage> -->
+                        <headerContent>
+                            <Title text="Advisory Buddy Search Tool" class="sapUiSmallMargin"/>
+                            <ToolbarSpacer />
+                            <!-- <Button icon="sap-icon://delete" tooltip="{i18n>delete}" press=".onDeleteChat" binding="{/deleteChatSession(...)}" />
+                            <Button icon="sap-icon://save" tooltip="{i18n>delete}" press=".onTest" /> -->
+                        </headerContent>
+                        <content>
+							<MessageStrip
+								text="Search is powered by the in-database embeddings from SAP HANA Cloud."
+								showIcon="true"
+								customIcon="sap-icon://ai"
+								showCloseButton="true"
+								class="sapUiTinyMarginBottom">
+							</MessageStrip>
+                            <OverflowToolbar height="auto" width="100%">
+                                <ToolbarSpacer />
+                                <FeedInput
+                                    showIcon="true"
+                                    icon="sap-icon://ai"
+                                    placeholder="Enter a search term...."
+                                    growing="false"
+                                    rows="3"
+                                    post=".onEmbedHANASimilaritySearch"
+                                    enabled="{ui>/enabled}"
+                                    class="sapUiTinyMarginTopBottom"
+                                    binding="{/getAiResponse(...)}" />
+                                <ToolbarSpacer />
+                            </OverflowToolbar>
+                            <!-- <List
+                                showSeparators="Inner"
+                                items="{test>/similarities}"> -->
+                            	<f:GridList
+                                    id="gridList"
+                                    headerText="Similar Requests"
+                                    items="{search>/similarities}"
+                                    delete="onDelete"
+                                    class="sapUiResponsiveContentPadding">
+                                    <f:customLayout>
+                                        <grid:GridBasicLayout gridTemplateColumns="repeat(auto-fit, minmax(25rem, 1fr))" gridGap="0.5rem" />
+										<!-- <grid:GridBoxLayout boxWidth="15rem" /> -->
+                                    </f:customLayout>
+                                <!-- <items> -->
+                                    <f:GridListItem
+                                        detailPress="onDetailPress"
+                                        press="onPress"
+                                        highlight="Information"
+                                        type="Active">
+                                    <VBox height="100%" justifyContent="SpaceBetween">
+                                        <layoutData>
+                                            <FlexItemData growFactor="1" shrinkFactor="0" /><!-- Don't shrink below minimum size. Fill space if available. -->
+                                        </layoutData>
+                                        <VBox class="sapUiSmallMargin">
+											<Title text="Request #{search>project_number}" wrapping="true" />
+                                            <!-- <HBox justifyContent="SpaceBetween">
+                                                <core:Icon
+                                                    src="sap-icon://da"
+                                                    size="2.625rem"
+                                                    color="Default"
+                                                    class="sapUiTinyMarginBottom" />
+                                                <ObjectStatus text="{search>SIMILARITY}" state="Success" />
+                                            </HBox> -->
+											<!-- <Text text="{search>TEXT}" wrapping="true" /> -->
+											<ExpandableText class="sapUiTinyMarginBottom sapUiTinyMarginTop" text="{search>TEXT}" overflowMode="Popover" />
+											<HBox alignItems="Center">
+												<Label text="Matching score:" wrapping="true" />
+												<tnt:InfoLabel text="{path: 'search>SIMILARITY', formatter: '.formatMatchingScore'}" colorScheme="{path: 'search>SIMILARITY', formatter: '.formatMatchingScoreColor'}" />
+											</HBox>
+                                        </VBox>
+										
+										<OverflowToolbar design="Solid" class="sapContrast">
+											<Button icon="sap-icon://hint" type="Transparent" press="onCoinStar"/>
+											<ToolbarSpacer />
+											<!-- <f:AvatarGroup 
+												groupType="Group"
+												tooltip="Avatar Group"
+												avatarDisplaySize="XS"
+												press="onGroupPress"
+												>
+												<f:AvatarGroupItem initials="hello"
+													fallbackIcon="sap-icon://user"
+													 />
+											</f:AvatarGroup> -->
+											<Button icon="sap-icon://add-favorite" type="Transparent" press="onAddFav"/>
+											<Button icon="sap-icon://copy" type="Transparent" press="onCopy"/>
+											<Button icon="sap-icon://call" type="Transparent" press="onCall"/>
+										</OverflowToolbar>
+                                    </VBox>
+                                </f:GridListItem>
+                                <!-- </items> -->
+                                <f:noData>
+                                    <IllustratedMessage 
+                                        enableVerticalResponsiveness="true"
+                                        title="What would you like to search today?"
+                                        description="SAP HANA Embeddings"
+                                        illustrationType="sapIllus-NoSearchResults" />
+                                </f:noData>
+                                </f:GridList>
+                            <!-- </List> -->
+								
+                        </content>
+                        <footer>
+                            <!-- <OverflowToolbar height="auto" width="100%">
+                                <ToolbarSpacer />
+                                <FeedInput
+                                    showIcon="true"
+                                    icon="https://styles.redditmedia.com/t5_ahn97m/styles/communityIcon_wnj87tgxiqec1.jpg"
+                                    placeholder="Type a message...."
+                                    growing="false"
+                                    rows="3"
+                                    post=".onSendMessage"
+                                    enabled="{ui>/enabled}"
+                                    class="sapUiSmallMarginTopBottom"
+                                    binding="{/getAiResponse(...)}" />
+                                <ToolbarSpacer />
+                            </OverflowToolbar> -->
+                        </footer>
+                    </Page>
+					<Page id="page3" floatingFooter="false" busy="{ui>/busy}" busyIndicatorDelay="0">
+						<!-- <IllustratedMessage
+							id="im"
+							illustrationSize="Auto"
+							illustrationType="sapIllus-SearchEarth">
+							<additionalContent>
+								<Button text="Action (optional)" />
+							</additionalContent>
+						</IllustratedMessage> -->
+                        <headerContent>
+                            <Title text="Manager's Cockpit" class="sapUiSmallMargin"/>
+                            <ToolbarSpacer />
+                            <!-- <Button icon="sap-icon://delete" tooltip="{i18n>delete}" press=".onDeleteChat" binding="{/deleteChatSession(...)}" />
+                            <Button icon="sap-icon://save" tooltip="{i18n>delete}" press=".onTest" /> -->
+                        </headerContent>
+                        <content>
+							<!-- <f:FlexibleColumnLayout id="fcl"
+								stateChange="onStateChanged"
+								layout="{/layout}"
+								backgroundDesign="Solid">
+							</f:FlexibleColumnLayout> -->
+							<f:Card width="850px" class="sapUiMediumMarginBegin sapUiTinyMarginTop">
+									<f:header>
+										<card:Header title="Cluster Analysis" subtitle="Cases up to today" />
+									</f:header>
+									<f:content>
+										<html:iframe id="chart" src="scatterchart.html" style="-webkit-transform: scale(0.9); transform: scale(0.9); -webkit-transform-origin: 0 0; transform-origin: 0 0;" frameBorder="0" height="700px" width="820px" scrolling="yes"/>
+									</f:content>
+								</f:Card>
+
+                            	<f:Card width="300px" class="sapUiMediumMarginBegin sapUiTinyMarginTop">
+									<f:header>
+										<card:Header title="Cases Assigned to Me" subtitle="For Today" />
+									</f:header>
+									<f:content>
+										<IllustratedMessage illustrationType="sapIllus-NoActivities">
+											<additionalContent>
+												<Button text="Add Activity" />
+											</additionalContent>
+										</IllustratedMessage>
+									</f:content>
+								</f:Card>
+									<f:Card width="300px" class="sapUiMediumMarginBegin sapUiTinyMarginTop">
+									<f:header>
+										<card:Header title="Inbox" />
+									</f:header>
+									<f:content>
+										<IllustratedMessage illustrationType="sapIllus-NoMail" />
+									</f:content>
+								</f:Card>
+                        </content>
+                        <footer>
+                            <!-- <OverflowToolbar height="auto" width="100%">
+                                <ToolbarSpacer />
+                                <FeedInput
+                                    showIcon="true"
+                                    icon="https://styles.redditmedia.com/t5_ahn97m/styles/communityIcon_wnj87tgxiqec1.jpg"
+                                    placeholder="Type a message...."
+                                    growing="false"
+                                    rows="3"
+                                    post=".onSendMessage"
+                                    enabled="{ui>/enabled}"
+                                    class="sapUiSmallMarginTopBottom"
+                                    binding="{/getAiResponse(...)}" />
+                                <ToolbarSpacer />
+                            </OverflowToolbar> -->
+                        </footer>
+                    </Page>
+					<Page id="page4" floatingFooter="false" busy="{ui>/busy}" busyIndicatorDelay="0">
                         <headerContent>
                             <Title text="SAGenAICity - AskTheCity Chatbot  🤖" class="sapUiSmallMargin"/>
                             <ToolbarSpacer />
@@ -183,208 +401,44 @@
                             </OverflowToolbar>
                         </footer>
                     </Page>
-					<Page id="page2" floatingFooter="false" busy="{ui>/busy}" busyIndicatorDelay="0">
-						<!-- <IllustratedMessage
-							id="im"
-							illustrationSize="Auto"
-							illustrationType="sapIllus-SearchEarth">
-							<additionalContent>
-								<Button text="Action (optional)" />
-							</additionalContent>
-						</IllustratedMessage> -->
+					<Page id="page5" floatingFooter="false" busy="{ui>/busy}" busyIndicatorDelay="0">
                         <headerContent>
-                            <Title text="Smart Technical Advisory Companion Search 🔍" class="sapUiSmallMargin"/>
+                            <Title text="Knowledge Base" class="sapUiSmallMargin"/>
                             <ToolbarSpacer />
-                            <!-- <Button icon="sap-icon://delete" tooltip="{i18n>delete}" press=".onDeleteChat" binding="{/deleteChatSession(...)}" />
-                            <Button icon="sap-icon://save" tooltip="{i18n>delete}" press=".onTest" /> -->
                         </headerContent>
                         <content>
-							<MessageStrip
-								text="Search is powered by the in-database embeddings from SAP HANA Cloud."
-								showIcon="true"
-								customIcon="sap-icon://ai"
-								showCloseButton="true"
-								class="sapUiTinyMarginBottom">
-							</MessageStrip>
-                            <OverflowToolbar height="auto" width="100%">
-                                <ToolbarSpacer />
-                                <FeedInput
-                                    showIcon="true"
-                                    icon="sap-icon://ai"
-                                    placeholder="Enter your search term...."
-                                    growing="false"
-                                    rows="3"
-                                    post=".onEmbedHANASimilaritySearch"
-                                    enabled="{ui>/enabled}"
-                                    class="sapUiTinyMarginTopBottom"
-                                    binding="{/getAiResponse(...)}" />
-                                <ToolbarSpacer />
-                            </OverflowToolbar>
-                            <!-- <List
-                                showSeparators="Inner"
-                                items="{test>/similarities}"> -->
-                            	<f:GridList
-                                    id="gridList"
-                                    headerText="How do we know if a car is autonomous or not?"
-                                    items="{search>/similarities}"
-                                    delete="onDelete"
-                                    class="sapUiResponsiveContentPadding">
-                                    <f:customLayout>
-                                        <grid:GridBasicLayout gridTemplateColumns="repeat(auto-fit, minmax(16rem, 1fr))" gridGap="0.5rem" />
-                                    </f:customLayout>
-                                <!-- <items> -->
-                                    <f:GridListItem
-                                        detailPress="onDetailPress"
-                                        press="onPress"
-                                        highlight="Information"
-                                        type="Active">
-                                    <VBox height="100%" justifyContent="SpaceBetween">
-                                        <layoutData>
-                                            <FlexItemData growFactor="1" shrinkFactor="0" /><!-- Don't shrink below minimum size. Fill space if available. -->
-                                        </layoutData>
-                                        <VBox class="sapUiSmallMargin">
-                                            <!-- <HBox justifyContent="SpaceBetween">
-                                                <core:Icon
-                                                    src="sap-icon://da"
-                                                    size="2.625rem"
-                                                    color="Default"
-                                                    class="sapUiTinyMarginBottom" />
-                                                <ObjectStatus text="{search>SIMILARITY}" state="Success" />
-                                            </HBox> -->
-											<!-- <Text text="{search>TEXT}" wrapping="true" /> -->
-											<ExpandableText class="sapUiTinyMarginBottom sapUiTinyMarginTop" text="{search>TEXT}" overflowMode="Popover" />
-                                            <Label text="Similarity Score: {search>SIMILARITY}" wrapping="true" class="sapUiTinyMarginBottom" />
-											<Title text="" wrapping="true" />
-                                        </VBox>
-										
-										<OverflowToolbar design="Solid" class="sapContrast">
-											<ToolbarSpacer />
-											<!-- <f:AvatarGroup 
-												groupType="Group"
-												tooltip="Avatar Group"
-												avatarDisplaySize="XS"
-												press="onGroupPress"
-												>
-												<f:AvatarGroupItem initials="hello"
-													fallbackIcon="sap-icon://user"
-													 />
-											</f:AvatarGroup> -->
-											<Button icon="sap-icon://accept" type="Transparent" />
-										</OverflowToolbar>
-                                    </VBox>
-                                </f:GridListItem>
-                                <!-- </items> -->
-                                <f:noData>
-                                    <IllustratedMessage 
-                                        enableVerticalResponsiveness="true"
-                                        title="What would you like to search today?"
-                                        description="SAP HANA Embeddings"
-                                        illustrationType="sapIllus-NoSearchResults" />
-                                </f:noData>
-                                </f:GridList>
-                            <!-- </List> -->
-								<f:Card width="550px" class="sapUiMediumMarginBegin sapUiTinyMarginTop">
-									<f:header>
-										<card:Header title="Cluster Analysis" subtitle="Cases up to today" />
-									</f:header>
-									<f:content>
-										<html:iframe id="chart" src="scatterchart.html" style="-webkit-transform: scale(1); transform: scale(1); -webkit-transform-origin: 0 0; transform-origin: 0 0;" frameBorder="0" height="500px" width="520px" scrolling="yes"/>
-									</f:content>
-								</f:Card>
-
-                            	<f:Card width="300px" class="sapUiMediumMarginBegin sapUiTinyMarginTop">
-									<f:header>
-										<card:Header title="Cases Assigned to Me" subtitle="For Today" />
-									</f:header>
-									<f:content>
-										<IllustratedMessage illustrationType="sapIllus-NoActivities">
-											<additionalContent>
-												<Button text="Add Activity" />
-											</additionalContent>
-										</IllustratedMessage>
-									</f:content>
-								</f:Card>
-									<f:Card width="300px" class="sapUiMediumMarginBegin sapUiTinyMarginTop">
-									<f:header>
-										<card:Header title="Inbox" />
-									</f:header>
-									<f:content>
-										<IllustratedMessage illustrationType="sapIllus-NoMail" />
-									</f:content>
-								</f:Card>
+                            <Table id="productsTable"
+								items="{projects>/all_projects}"
+								headerText="">
+								<columns>
+									<Column id="productCol" width="12em"><Text text="Request" /></Column>
+									<Column id="supplierCol" minScreenWidth="Tablet" demandPopin="true"><Text text="Details" /></Column>
+									<Column id="dimensionsCol" minScreenWidth="Tablet" demandPopin="true" hAlign="End"><Text text="Remarks" /></Column>
+								</columns>
+								<items>
+									<ColumnListItem
+										type="Active"
+										vAlign="Middle"
+										navigated="{
+												parts: [
+													'settings>/navigatedItem',
+													'projects>project_number'
+												],
+												formatter: '.isNavigated'
+											}"
+										press="onProjectPress">
+										<cells>
+											<ObjectIdentifier title="ID #{projects>project_number}" text="{projects>project_date}" />
+											<ObjectIdentifier title="{projects>topic}" text="{projects>solution}" />
+											<Text text="{projects>comment} by {projects>architect}" />
+										</cells>
+									</ColumnListItem>
+								</items>
+							</Table>
                         </content>
                         <footer>
-                            <!-- <OverflowToolbar height="auto" width="100%">
-                                <ToolbarSpacer />
-                                <FeedInput
-                                    showIcon="true"
-                                    icon="https://styles.redditmedia.com/t5_ahn97m/styles/communityIcon_wnj87tgxiqec1.jpg"
-                                    placeholder="Type a message...."
-                                    growing="false"
-                                    rows="3"
-                                    post=".onSendMessage"
-                                    enabled="{ui>/enabled}"
-                                    class="sapUiSmallMarginTopBottom"
-                                    binding="{/getAiResponse(...)}" />
-                                <ToolbarSpacer />
-                            </OverflowToolbar> -->
                         </footer>
                     </Page>
-					<Page id="page3" floatingFooter="false" busy="{ui>/busy}" busyIndicatorDelay="0">
-						<!-- <IllustratedMessage
-							id="im"
-							illustrationSize="Auto"
-							illustrationType="sapIllus-SearchEarth">
-							<additionalContent>
-								<Button text="Action (optional)" />
-							</additionalContent>
-						</IllustratedMessage> -->
-                        <headerContent>
-                            <Title text="List of Requests" class="sapUiSmallMargin"/>
-                            <ToolbarSpacer />
-                            <!-- <Button icon="sap-icon://delete" tooltip="{i18n>delete}" press=".onDeleteChat" binding="{/deleteChatSession(...)}" />
-                            <Button icon="sap-icon://save" tooltip="{i18n>delete}" press=".onTest" /> -->
-                        </headerContent>
-                        <content>
-							<!-- <f:FlexibleColumnLayout id="fcl"
-								stateChange="onStateChanged"
-								layout="{/layout}"
-								backgroundDesign="Solid">
-							</f:FlexibleColumnLayout> -->
-                        </content>
-                        <footer>
-                            <!-- <OverflowToolbar height="auto" width="100%">
-                                <ToolbarSpacer />
-                                <FeedInput
-                                    showIcon="true"
-                                    icon="https://styles.redditmedia.com/t5_ahn97m/styles/communityIcon_wnj87tgxiqec1.jpg"
-                                    placeholder="Type a message...."
-                                    growing="false"
-                                    rows="3"
-                                    post=".onSendMessage"
-                                    enabled="{ui>/enabled}"
-                                    class="sapUiSmallMarginTopBottom"
-                                    binding="{/getAiResponse(...)}" />
-                                <ToolbarSpacer />
-                            </OverflowToolbar> -->
-                        </footer>
-                    </Page>
-					<ScrollContainer
-						id="page4"
-						horizontal="false"
-						vertical="true"
-						height="100%"
-						class="sapUiContentPadding">
-						<Text text="Identity" />
-					</ScrollContainer>
-					<ScrollContainer
-							id="page5"
-							horizontal="false"
-							vertical="true"
-							height="100%"
-							class="sapUiContentPadding">
-						<Text text="Provisioning" />
-					</ScrollContainer>
 					<ScrollContainer
 							id="page6"
 							horizontal="false"

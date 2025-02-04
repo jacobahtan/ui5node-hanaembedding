@@ -1,16 +1,29 @@
 {
-	"selectedKey": "page2",
+	"selectedKey": "page1",
 	"navigation": [
 		{
-			"title": "Citizen Chat",
-			"icon": "sap-icon://citizen-connect",
+			"title": "Welcome",
+			"icon": "sap-icon://home",
 			"key": "page1",
-			"visible": false
+			"visible": true
 		},
 		{
-			"title": "TAS Search",
-			"icon": "sap-icon://search",
-			"key": "page2"
+			"title": "Advisory Buddy",
+			"icon": "sap-icon://citizen-connect",
+			"key": "page2",
+			"visible": true
+		},
+		{
+			"title": "Knowledge Base",
+			"icon": "sap-icon://activity-items",
+			"key": "page5",
+			"visible": true
+		},
+		{
+			"title": "Manager Cockpit",
+			"icon": "sap-icon://customer-view",
+			"key": "page3",
+			"visible": true
 		},
 		{
 			"title": "Users and Groups",
