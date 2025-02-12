@@ -5,7 +5,16 @@
 <title>Scatter Bubble Chart</title>
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <style>
-body { font-family: sans-serif; }
+body { 
+    font-family: sans-serif; 
+    margin: 20px; 
+}
+#chart { 
+    padding-left: 20px; 
+    padding-top: 120px;
+    width: 800px; /* Or whatever width you want */
+    margin: 0 auto; /* Center horizontally */
+}
 .tooltip {
   position: absolute;
   text-align: center;
@@ -18,16 +27,20 @@ body { font-family: sans-serif; }
   transition: opacity 0.2s ease-in-out;
 }
 .legend {
+    position: absolute;
+    top: 20px; /* Position at the top */
+    left: 20px; /* Position on the left (or adjust as needed) */
     display: flex;
-    flex-wrap: wrap;
-    margin-top: 20px;
+    flex-wrap: wrap; /* Allow wrapping */
+    /* overflow-y: auto; */
+    /* max-height: 60px; */
 }
 
 .legend-item {
     display: flex;
     align-items: center;
     margin-right: 20px;
-    margin-bottom: 10px;
+    margin-bottom: 10px; /* Space between legend items */
     cursor: pointer;
 }
 
@@ -41,17 +54,49 @@ body { font-family: sans-serif; }
     border-radius: 50%;
     margin-right: 5px;
 }
+
+/* Media query for smaller screens */
+@media (max-width: 600px) { /* Adjust breakpoint as needed */
+    .legend {
+        flex-direction: column; /* Stack legend items vertically */
+        max-height: 100px; /* Adjust maximum height as needed */
+        overflow-y: auto; /* Make it scrollable */
+    }
+    .legend-item {
+        margin-right: 10px; /* Reduce right margin */
+    }
+
+    #chart { padding-left: 20px; padding-top: 140px; }
+}
+
+/* Basic toast styling */
+.toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+.toast.show {
+    opacity: 1;
+}
 </style>
 </head>
 <body>
 
 <div id="chart"></div>
 <div class="legend"></div>
+<div id="toast" class="toast"></div>
 
 <script>
-const margin = { top: 20, right: 20, bottom: 20, left: 20 },
-    width = 800 - margin.left - margin.right,
-    height = 600 - margin.top - margin.bottom;
+const margin = { top: 20, right: 150, bottom: 20, left: 20 }; // Adjusted right margin for legend
+const width = 800 - margin.left - margin.right;
+const height = 600 - margin.top - margin.bottom;
 
 const svg = d3.select("#chart").append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -59,85 +104,143 @@ const svg = d3.select("#chart").append("svg")
     .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-
 const color = d3.scaleOrdinal(d3.schemePastel1);
 
-d3.csv("mockdata/cluster_mockup.csv").then(data => {
 
-    const x = d3.scaleLinear()
-        .domain(d3.extent(data, d => +d.x))
-        .range([0, width]);
+const apiUrlPoints = "https://indb-embedding.cfapps.eu12.hana.ondemand.com/get_clusters";
+const apiUrlDescriptions = "https://indb-embedding.cfapps.eu12.hana.ondemand.com/get_clusters_description";
 
-    const y = d3.scaleLinear()
-        .domain(d3.extent(data, d => +d.y))
-        .range([height, 0]);
-
-    const radius = d3.scaleSqrt()
-        .domain([0, d3.max(data, d => 10)])
-        .range([5, 20]);
-
-    let circles = svg.selectAll("circle")
-        .data(data)
-        .enter().append("circle")
-        .attr("cx", d => x(d.x))
-        .attr("cy", d => y(d.y))
-        .attr("r", d => radius(10))
-        .attr("fill", d => color(d.CLUSTER_ID))
-        .on("mouseover", function(event, d) {
-            d3.select(".tooltip")
-                .transition().duration(200).style("opacity", .9);
-            d3.select(".tooltip")
-                .html("Project Number: " + d.PROJECT_NUMBER + "<br>X: " + d.x + "<br>Y: " + d.y + "<br>Cluster: " + d.CLUSTER_ID)
-                .style("left", (event.pageX) + "px")
-                .style("top", (event.pageY - 28) + "px");
-        })
-        .on("mouseout", function(d) {
-            d3.select(".tooltip").transition().duration(500).style("opacity", 0);
-        })
-        .on("click", function(event, d) {
-            console.log("Clicked data:", d);
-            alert("Clicked on Project Number:" + d.PROJECT_NUMBER);
+Promise.all([d3.json(apiUrlPoints), d3.json(apiUrlDescriptions)])
+    .then(([pointsData, descriptionsData]) => {
+        const descriptionMap = new Map();
+        descriptionsData.forEach(d => {
+            descriptionMap.set(d.CLUSTER_ID, d.CLUSTER_DESCRIPTION);
         });
 
-    svg.append("g")
-        .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(x).tickSize(0).tickFormat(""));
+        const processedPointsData = pointsData.map(point => ({
+            ...point,
+            CLUSTER_DESCRIPTION: descriptionMap.get(point.CLUSTER_ID) || "Unknown Cluster"
+        }));
 
-    svg.append("g")
-        .call(d3.axisLeft(y).tickSize(0).tickFormat(""));
 
-    d3.select("body").append("div")
-        .attr("class", "tooltip");
+        const x = d3.scaleLinear()
+            .domain(d3.extent(processedPointsData, d => +d.x))
+            .range([0, width]);
 
-    const clusters = [...new Set(data.map(d => d.CLUSTER_ID))].sort();
+        const y = d3.scaleLinear()
+            .domain(d3.extent(processedPointsData, d => +d.y))
+            .range([height, 0]);
 
-    const legend = d3.select(".legend")
-        .selectAll(".legend-item")
-        .data(clusters)
-        .enter().append("div")
-        .attr("class", "legend-item")
-        .on("click", function(event, cluster) {
-            const legendItem = d3.select(this);
-            legendItem.classed("active", !legendItem.classed("active"));
+        const radius = d3.scaleSqrt()
+            .domain([0, d3.max(processedPointsData, d => 10)])
+            .range([5, 20]);
 
-            const selectedClusters = d3.selectAll(".legend-item.active").data();
+        let circles = svg.selectAll("circle")
+            .data(processedPointsData)
+            .enter().append("circle")
+            .attr("cx", d => x(d.x))
+            .attr("cy", d => y(d.y))
+            .attr("r", 0)
+            .attr("fill", d => color(d.CLUSTER_ID))
+            .on("mouseover", function(event, d) {
+                d3.select(".tooltip")
+                    .transition().duration(200).style("opacity", .9);
+                d3.select(".tooltip")
+                    .html(`Project Number: ${d.PROJECT_NUMBER}<br>X: ${d.x}<br>Y: ${d.y}<br>Cluster: ${d.CLUSTER_DESCRIPTION}`)
+                    .style("left", (event.pageX) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            })
+            .on("mouseout", function(d) {
+                d3.select(".tooltip").transition().duration(500).style("opacity", 0);
+            })
+            .on("click", function(event, d) {
+                // alert();
+                showBubbleDetails(d);
+                // Show toast message
+                showToast(`Project Number: ${d.PROJECT_NUMBER}<br>X: ${d.x}<br>Y: ${d.y}<br>Cluster: ${d.CLUSTER_DESCRIPTION}`);
+            })
+            .transition().duration(500).attr("r", d => radius(10));
 
-            circles.transition().duration(300)
-                .style("opacity", d => selectedClusters.length === 0 || selectedClusters.includes(String(d.CLUSTER_ID)) ? 1 : 0);
 
-            if (selectedClusters.length === 0) {
-                circles.transition().duration(300).style("opacity", 1);
-            }
-        });
+        d3.select("body").append("div").attr("class", "tooltip");
 
-    legend.append("div")
-        .attr("class", "legend-circle")
-        .style("background-color", d => color(d));
+        const clusters = [...new Set(processedPointsData.map(d => d.CLUSTER_ID))].sort();
 
-    legend.append("span")
-        .text(d => "Cluster " + d);
+        const legend = d3.select(".legend")
+            .selectAll(".legend-item")
+            .data(clusters)
+            .enter().append("div")
+            .attr("class", "legend-item")
+            .on("click", function(event, cluster) {
+                const legendItem = d3.select(this);
+                legendItem.classed("active", !legendItem.classed("active"));
 
-});
+                const selectedClusters = d3.selectAll(".legend-item.active").data();
+
+                svg.selectAll("circle")
+                    .transition().duration(300)
+                    .style("opacity", d => {
+                        if (selectedClusters.length === 0) {
+                            return 1; // Show all if no clusters are selected
+                        } else {
+                            return selectedClusters.includes(d.CLUSTER_ID) ? 1 : 0; // Filter based on selected clusters
+                        }
+                    });
+
+
+            });
+
+        legend.append("div")
+            .attr("class", "legend-circle")
+            .style("background-color", d => color(d));
+
+        legend.append("span")
+            .text(cluster => descriptionMap.get(cluster) || "Unknown Cluster");
+
+    })
+    .catch(error => {
+        console.error("Error loading data:", error);
+        svg.append("text")
+            .attr("x", width / 2)
+            .attr("y", height / 2)
+            .attr("text-anchor", "middle")
+            .text("Error loading data. Please try again later.");
+    });
+
+
+function showToast(message) {
+    const toast = document.getElementById("toast");
+    toast.innerHTML = message;
+    toast.classList.add("show");
+    setTimeout(() => {
+        toast.classList.remove("show");
+    }, 3000); // Hide after 3 seconds
+}
+
+// Function to handle bubble click event
+function showBubbleDetails(data) {
+    // Access the data properties like this:
+    const projectNumber = data.PROJECT_NUMBER;
+    const xValue = data.x;
+    const yValue = data.y;
+    const clusterDescription = data.CLUSTER_DESCRIPTION;
+
+    // Here you can do whatever you want with the data:
+    // 1. Alert:
+    // alert(`Project Number: ${projectNumber}\nX: ${xValue}\nY: ${yValue}\nCluster: ${clusterDescription}`);
+
+    // 2. Toast message (if you're using the toast):
+    showToast(`Project Number: ${projectNumber}<br>X: ${xValue}<br>Y: ${yValue}<br>Cluster: ${clusterDescription}`);
+
+    // 3. Open a new window/tab:
+    // window.open(`details.html?id=${projectNumber}`, '_blank'); // Example
+
+    // 4. Update a div on the page:
+    // document.getElementById("details").innerHTML = `Project Number: ${projectNumber} ...`;
+
+    // 5. Or any other action you want to perform.
+    console.log("Clicked Bubble Data:", data); // Check the console
+}
 
 </script>
 

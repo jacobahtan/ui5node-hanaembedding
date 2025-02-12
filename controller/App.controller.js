@@ -9,9 +9,23 @@ sap.ui.define(
     "sap/m/MessageToast",
     "require",
     "sap/f/FlexibleColumnLayout",
-    "sap/ui/core/Fragment",],
-  function (Log, BaseController, tntLib, Device, JSONModel, MessageToast, require, FlexibleColumnLayout, Fragment) {
+    "sap/ui/core/Fragment",
+    "sap/ui/core/dnd/DragInfo",
+    "sap/ui/core/dnd/DropInfo",
+    "sap/f/dnd/GridDropInfo",
+    "sap/ui/core/library",
+    "sap/ui/model/Filter",
+    "sap/ui/model/FilterOperator",
+    "sap/viz/ui5/data/FlattenedDataset",
+    "sap/viz/ui5/controls/common/feeds/FeedItem"],
+  function (Log, BaseController, tntLib, Device, JSONModel, MessageToast, require, FlexibleColumnLayout, Fragment, DragInfo, DropInfo, GridDropInfo, coreLibrary, Filter, FilterOperator, FlattenedDataset, FeedItem) {
     const logger = Log.getLogger("ask-sa-gai-city-chat");
+
+    // shortcut for sap.ui.core.dnd.DropLayout
+    var DropLayout = coreLibrary.dnd.DropLayout;
+
+    // shortcut for sap.ui.core.dnd.DropPosition
+    var DropPosition = coreLibrary.dnd.DropPosition;
 
     function createPageJson(header, title, titleUrl, icon, elements) {
       const pageData = {
@@ -97,8 +111,38 @@ sap.ui.define(
       }
     }
 
+    function transformDataForCategoryPieGlobal(apiData) {
+      const categoryCounts = {};
+
+      // Iterate through the project_categories array
+      for (const project of apiData.project_categories) {
+        const category = project.category_label;
+
+        // Increment the count for the current category, or initialize it to 1
+        categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+      }
+
+      // Transform the categoryCounts object into the desired array format
+      const transformedData = {
+        Categories: Object.entries(categoryCounts).map(([Category, ProjectsCount]) => ({
+          Category,
+          ProjectsCount,
+        })),
+      };
+
+      return transformedData;
+    }
+
 
     return BaseController.extend("chat.controller.App", {
+      onJoule: function () {
+        if (document.getElementById("cai-webclient-main").style.display == "block") {
+          document.getElementById("cai-webclient-main").style.display = "none";
+        } else {
+          document.getElementById("cai-webclient-main").style.display = "block";
+        }
+
+      },
       onChartLoad: function () {
         var self = this;
         // console.log(self.getView().byId("chartPage").getSrc());
@@ -207,7 +251,7 @@ sap.ui.define(
         const searchValue = evt.getParameter("value");
 
         var self = this;
-        self.getView().byId("gridList").setHeaderText("Similar Requests from: " + searchValue);
+        self.getView().byId("gridList").setHeaderText("Similar Requests: " + searchValue);
 
         const myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
@@ -274,7 +318,7 @@ sap.ui.define(
         var oModel = this.getView().getModel("search");
         var gridlistitemcontextdata = oModel.getProperty(oEvent.getSource().getParent().oPropagatedProperties.oBindingContexts.search.sPath);
         console.log(gridlistitemcontextdata);
-        MessageToast.show("Text copied" + gridlistitemcontextdata.TEXT);
+        // MessageToast.show("Text copied" + gridlistitemcontextdata.TEXT);
 
         copyToClipboard(gridlistitemcontextdata.TEXT);
       },
@@ -333,7 +377,347 @@ sap.ui.define(
         // return userMessage;
       },
 
+      initData: function () {
+        this.byId("list1").setModel(new JSONModel([
+          { title: "Multitenancy", rows: 1, columns: 1 },
+          { title: "Business AI", rows: 1, columns: 1 },
+          { title: "Integration Suite", rows: 1, columns: 1 }
+        ]), "grid");
+
+        this.byId("grid1").setModel(new JSONModel([
+          { title: "CAP", rows: 1, columns: 1 },
+          { title: "SAPUI5", rows: 1, columns: 1 },
+          { title: "Java", rows: 1, columns: 1 }
+        ]), "grid");
+      },
+
+      attachDragAndDrop: function () {
+        var oList = this.byId("list1");
+        oList.addDragDropConfig(new DragInfo({
+          sourceAggregation: "items"
+        }));
+
+        oList.addDragDropConfig(new DropInfo({
+          targetAggregation: "items",
+          dropPosition: DropPosition.Between,
+          dropLayout: DropLayout.Vertical,
+          drop: this.onDrop.bind(this)
+        }));
+
+        var oGrid = this.byId("grid1");
+        oGrid.addDragDropConfig(new DragInfo({
+          sourceAggregation: "items"
+        }));
+
+        oGrid.addDragDropConfig(new GridDropInfo({
+          targetAggregation: "items",
+          dropPosition: DropPosition.Between,
+          dropLayout: DropLayout.Horizontal,
+          dropIndicatorSize: this.onDropIndicatorSize.bind(this),
+          drop: this.onDrop.bind(this)
+        }));
+      },
+
+      onDropIndicatorSize: function (oDraggedControl) {
+        var oBindingContext = oDraggedControl.getBindingContext(),
+          oData = oBindingContext.getModel("grid").getProperty(oBindingContext.getPath());
+
+        if (oDraggedControl.isA("sap.m.StandardListItem")) {
+          return {
+            rows: oData.rows,
+            columns: oData.columns
+          };
+        }
+      },
+
+      onDrop: function (oInfo) {
+        var oDragged = oInfo.getParameter("draggedControl"),
+          oDropped = oInfo.getParameter("droppedControl"),
+          sInsertPosition = oInfo.getParameter("dropPosition"),
+
+          oDragContainer = oDragged.getParent(),
+          oDropContainer = oInfo.getSource().getParent(),
+
+          oDragModel = oDragContainer.getModel("grid"),
+          oDropModel = oDropContainer.getModel("grid"),
+          oDragModelData = oDragModel.getData(),
+          oDropModelData = oDropModel.getData(),
+
+          iDragPosition = oDragContainer.indexOfItem(oDragged),
+          iDropPosition = oDropContainer.indexOfItem(oDropped);
+
+        // remove the item
+        var oItem = oDragModelData[iDragPosition];
+        oDragModelData.splice(iDragPosition, 1);
+
+        if (oDragModel === oDropModel && iDragPosition < iDropPosition) {
+          iDropPosition--;
+        }
+
+        if (sInsertPosition === "After") {
+          iDropPosition++;
+        }
+
+        // insert the control in target aggregation
+        oDropModelData.splice(iDropPosition, 0, oItem);
+
+        if (oDragModel !== oDropModel) {
+          oDragModel.setData(oDragModelData);
+          oDropModel.setData(oDropModelData);
+        } else {
+          oDropModel.setData(oDropModelData);
+        }
+
+        this.byId("grid1").focusItem(iDropPosition);
+      },
+
+      onListItemPress: function (oEvent) {
+        // MessageToast.show("Pressed : " + oEvent.getSource().getTitle());
+        const oListItem = oEvent.getSource(),
+          oView = this.getView();
+        // const oListItem = oEvent.getSource(); // Get the pressed list item
+        console.log(oListItem);
+
+        //Get the ObjectAttribute control using the idForLabel
+        const oObjectAttribute = oListItem.getAggregation("attributes")[0];
+        console.log(oObjectAttribute);
+
+        const oText = oObjectAttribute.getAggregation("_textControl");
+        console.log(oText);
+        console.log(oText.getDomRef());
+        oText.getDomRef().classList.remove("sapMTextNoWrap");
+        // oText.removeAllStyleClasses();
+        // oText.setProperty("class", "sapMText sapUiSelectable sapMTextWrap sapMTextMaxWidth");
+
+        // oText.removeStyleClass("sapMTextNoWrap");
+        // oText.addStyleClass("sapMTextWrap");
+
+        console.log(oListItem.oBindingContexts.projects.sPath);
+
+        /**
+         * [TODO]
+         * Popover
+         */
+        // create popover
+
+        // var oModel = this.getView().getModel("projects");
+
+        // if (!this._pPopover) {
+        //   this._pPopover = Fragment.load({
+        //     id: oView.getId(),
+        //     name: "chat.view.ProjectPopover",
+        //     controller: this
+        //   }).then(function(oPopover) {
+        //     oView.addDependent(oPopover);
+        //     oPopover.bindElement(oListItem.oBindingContexts.projects.sPath);
+        //     return oPopover;
+        //   });
+        // }
+        // this._pPopover.then(function(oPopover) {
+        //   oPopover.setModel(oModel);
+        //   oPopover.openBy(oListItem);
+        // });
+      },
+
+      onSearch: function (oEvent) {
+        // add filter for search
+        var aFilters = [];
+        var sQuery = oEvent.getSource().getValue();
+        console.log(sQuery);
+        if (sQuery && sQuery.length > 0) {
+          var filter = new Filter("topic", FilterOperator.Contains, sQuery);
+          aFilters.push(filter);
+        }
+
+        // update list binding
+        var oList = this.byId("idList");
+        var oBinding = oList.getBinding("items");
+        oBinding.filter(aFilters, "Application");
+      },
+
+      handleSelectionChange: async function (oEvent) {
+        var oItem = oEvent.getParameter("selectedItem");
+        // console.log(oItem.getKey());
+        const url = 'https://indb-embedding.cfapps.eu12.hana.ondemand.com/get_advisories_by_expert_and_category?expert=' + oItem.getKey();
+
+        var vizFrame = this.getView().byId(this._constants.vizFrame.id);
+        // console.log(vizFrame);
+
+        const options = { method: 'GET' };
+
+        try {
+          const response = await fetch(url, options);
+          const data = await response.json();
+          var oModel = new JSONModel(data);
+          vizFrame.setModel(oModel);
+          vizFrame.vizUpdate();
+        } catch (error) {
+          console.error(error);
+        }
+      },
+
+      onSelectionChange: function (oEvent) {
+        var oList = oEvent.getSource();
+        var oLabel = this.byId("idFilterLabel");
+        var oInfoToolbar = this.byId("idInfoToolbar");
+
+        // With the 'getSelectedContexts' function you can access the context paths
+        // of all list items that have been selected, regardless of any current
+        // filter on the aggregation binding.
+        var aContexts = oList.getSelectedContexts(true);
+
+        // update UI
+        var bSelected = (aContexts && aContexts.length > 0);
+        var sText = (bSelected) ? aContexts.length + " selected" : null;
+        oInfoToolbar.setVisible(bSelected);
+        oLabel.setText(sText);
+      },
+
+      _constants: {
+        sampleName: "chat",
+        vizFrame: {
+          id: "chartContainerVizFrame",
+          dataset: {
+            dimensions: [{
+              name: 'Category',
+              value: "{CATEGORY}"
+            }],
+            measures: [{
+              group: 1,
+              name: 'Profit',
+              value: '{Revenue2}'
+            }, {
+              group: 1,
+              name: 'Target',
+              value: '{Target}'
+            }, {
+              group: 1,
+              name: "Forcast",
+              value: "{Forcast}"
+            }, {
+              group: 1,
+              name: "No of Projects",
+              value: "{PROJECTS}"
+            },
+            {
+              group: 1,
+              name: 'Revenue2',
+              value: '{Revenue2}'
+            }, {
+              group: 1,
+              name: "Revenue3",
+              value: "{Revenue3}"
+            }],
+            data: {
+              path: "/advisories_by_category"
+            }
+          },
+          // modulePath: "/mockdata/ProductsByCategory.json",
+          type: "column",
+          properties: {
+            title: {
+              visible: false,
+              text: "Trending Topics by Categories"
+            },
+            legend: {
+              visible: false
+            },
+            plotArea: {
+              showGap: true
+            },
+          },
+          feedItems: [{
+            'uid': "primaryValues",
+            'type': "Measure",
+            'values': ["No of Projects"]
+          }, {
+            'uid': "axisLabels",
+            'type': "Dimension",
+            'values': ["Category"]
+          }, {
+            'uid': "targetValues",
+            'type': "Measure",
+            'values': ["Target"]
+          }]
+        }
+      },
+
+      _pieconstants: {
+        sampleName: "chat",
+        vizFrame: {
+          id: "piechartContainerVizFrame",
+          dataset: {
+            dimensions: [{
+              name: 'Category',
+              value: "{Category}"
+            }],
+            measures: [{
+              group: 1,
+              name: 'Profit',
+              value: '{Revenue2}'
+            }, {
+              group: 1,
+              name: 'Target',
+              value: '{Target}'
+            }, {
+              group: 1,
+              name: "Forcast",
+              value: "{Forcast}"
+            }, {
+              group: 1,
+              name: "ProjectsCount",
+              value: "{ProjectsCount}"
+            },
+            {
+              group: 1,
+              name: 'Revenue2',
+              value: '{Revenue2}'
+            }, {
+              group: 1,
+              name: "Revenue3",
+              value: "{Revenue3}"
+            }],
+            data: {
+              path: "/Categories"
+            }
+          },
+          // modulePath: "/mockdata/ChartContainerData.json",
+          type: "pie",
+          properties: {
+            legend: {
+              visible: false
+            },
+            title: {
+              visible: false,
+              text: "Trending Topics by Categories"
+            },
+            plotArea: {
+              showGap: true,
+              dataLabel: {
+                visible: true
+              }
+            }
+          },
+          feedItems: [{
+            'uid': "size",
+            'type': "Measure",
+            'values': ["ProjectsCount"]
+          }, {
+            'uid': "color",
+            'type': "Dimension",
+            'values': ["Category"]
+          }, {
+            'uid': "targetValues",
+            'type': "Measure",
+            'values': ["Target"]
+          }]
+        }
+      },
+
       onInit: async function () {
+        this.initData();
+        this.attachDragAndDrop();
+
         var oDeviceModel = new JSONModel(Device);
         this.getView().setModel(oDeviceModel, "device");
 
@@ -348,8 +732,111 @@ sap.ui.define(
         this.oRouter.attachRouteMatched(this.onRouteMatched, this);
         this.oRouter.attachBeforeRouteMatched(this.onBeforeRouteMatched, this);
 
+        this.byId("sideNavigation").setSelectedKey("page1");
+
+        var oVizFrame = this.getView().byId(this._constants.vizFrame.id);
+        this._updateVizFrame(oVizFrame);
+
+        var oPieVizFrame = this.getView().byId(this._pieconstants.vizFrame.id);
+        this._updatePieVizFrame(oPieVizFrame);
+
+
+
         // sap.ui.getCore().byId("container-chat---App--sideNavigation").setExpanded(false);
         // console.log(sap.ui.getCore().byId("container-chat---App--sideNavigation").getExpanded());
+      },
+
+      /* ============================================================ */
+      /* Helper Methods                                               */
+      /* ============================================================ */
+      /**
+       * Updated the Viz Frame in the view.
+       *
+       * @private
+       * @param {sap.viz.ui5.controls.VizFrame} vizFrame Viz Frame that needs to be updated
+       */
+      _updateVizFrame: async function (vizFrame) {
+        var oVizFrame = this._constants.vizFrame;
+
+        const url = 'https://indb-embedding.cfapps.eu12.hana.ondemand.com/get_advisories_by_expert_and_category?expert=Jules';
+        const options = { method: 'GET' };
+
+        try {
+          const response = await fetch(url, options);
+          const data = await response.json();
+          // var xx = transformDataForCategoryPieGlobal(data);
+          // console.log(xx);
+          console.log(data);
+          // var catJson = { "Products": [{ "Country": "Cloud Architecture", "Profit": 100, "Forcast": 200, "Target": 20, "Revenue": 20, "Revenue2": 20, "Revenue3": 512 }, { "Country": "Data to Value", "Profit": 159, "Forcast": 140, "Target": 150, "Revenue": 30, "Revenue2": 100, "Revenue3": 303 }, { "Country": "Security", "Profit": 129, "Forcast": 120, "Target": 100, "Revenue": 200, "Revenue2": 222, "Revenue3": 263 }, { "Country": "Application development and UI", "Profit": 58, "Forcast": 60, "Target": 80, "Revenue": 116, "Revenue2": 152, "Revenue3": 113 }, { "Country": "Multitenancy", "Profit": 149, "Forcast": 120, "Target": 150, "Revenue": 249, "Revenue2": 292, "Revenue3": 443 }, { "Country": "Integration", "Profit": 49, "Forcast": 60, "Target": 55, "Revenue": 1449, "Revenue2": 242, "Revenue3": 243 }] };
+          var oModel = new JSONModel(data);
+          var oDataset = new FlattenedDataset(oVizFrame.dataset);
+
+          vizFrame.setVizProperties(oVizFrame.properties);
+          vizFrame.setDataset(oDataset);
+          vizFrame.setModel(oModel);
+          this._addFeedItems(vizFrame, oVizFrame.feedItems);
+          vizFrame.setVizType(oVizFrame.type);
+        } catch (error) {
+          console.error(error);
+        }
+
+
+        // var oVizFrame = this._constants.vizFrame;
+        // var oVizFramePath = sap.ui.require.toUrl(this._constants.sampleName + oVizFrame.modulePath);
+        // var oModel = new JSONModel(oVizFramePath);
+        // var oDataset = new FlattenedDataset(oVizFrame.dataset);
+
+
+      },
+      /**
+       * Adds the passed feed items to the passed Viz Frame.
+       *
+       * @private
+       * @param {sap.viz.ui5.controls.VizFrame} vizFrame Viz Frame to add feed items to
+       * @param {Object[]} feedItems Feed items to add
+       */
+      _addFeedItems: function (vizFrame, feedItems) {
+        for (var i = 0; i < feedItems.length; i++) {
+          vizFrame.addFeed(new FeedItem(feedItems[i]));
+        }
+      },
+
+      _updatePieVizFrame: async function (vizFrame) {
+        var oVizFrame = this._pieconstants.vizFrame;
+
+        const url = 'https://indb-embedding.cfapps.eu12.hana.ondemand.com/get_all_project_categories';
+        const options = { method: 'GET' };
+
+        try {
+          const response = await fetch(url, options);
+          const data = await response.json();
+          var xx = transformDataForCategoryPieGlobal(data);
+          // console.log(xx);
+          // console.log(data);
+          // var catJson = { "Products": [{ "Country": "Cloud Architecture", "Profit": 100, "Forcast": 200, "Target": 20, "Revenue": 20, "Revenue2": 20, "Revenue3": 512 }, { "Country": "Data to Value", "Profit": 159, "Forcast": 140, "Target": 150, "Revenue": 30, "Revenue2": 100, "Revenue3": 303 }, { "Country": "Security", "Profit": 129, "Forcast": 120, "Target": 100, "Revenue": 200, "Revenue2": 222, "Revenue3": 263 }, { "Country": "Application development and UI", "Profit": 58, "Forcast": 60, "Target": 80, "Revenue": 116, "Revenue2": 152, "Revenue3": 113 }, { "Country": "Multitenancy", "Profit": 149, "Forcast": 120, "Target": 150, "Revenue": 249, "Revenue2": 292, "Revenue3": 443 }, { "Country": "Integration", "Profit": 49, "Forcast": 60, "Target": 55, "Revenue": 1449, "Revenue2": 242, "Revenue3": 243 }] };
+          var oModel = new JSONModel(xx);
+          var oDataset = new FlattenedDataset(oVizFrame.dataset);
+
+          vizFrame.setVizProperties(oVizFrame.properties);
+          vizFrame.setDataset(oDataset);
+          vizFrame.setModel(oModel);
+          this._addPieFeedItems(vizFrame, oVizFrame.feedItems);
+          vizFrame.setVizType(oVizFrame.type);
+        } catch (error) {
+          console.error(error);
+        }
+      },
+      /**
+       * Adds the passed feed items to the passed Viz Frame.
+       *
+       * @private
+       * @param {sap.viz.ui5.controls.VizFrame} vizFrame Viz Frame to add feed items to
+       * @param {Object[]} feedItems Feed items to add
+       */
+      _addPieFeedItems: function (vizFrame, feedItems) {
+        for (var i = 0; i < feedItems.length; i++) {
+          vizFrame.addFeed(new FeedItem(feedItems[i]));
+        }
       },
 
       onProjectPress: function (oEvent) {
@@ -365,16 +852,16 @@ sap.ui.define(
         var gridlistitemcontextdata = oModel.getProperty(oItem.oBindingContexts.projects.sPath);
         var projID = gridlistitemcontextdata.project_number;
         console.log(projID);
-        MessageToast.show(projID);
+        // MessageToast.show(projID);
       },
 
-      isNavigated: function(sNavigatedItemId, sItemId) {
+      isNavigated: function (sNavigatedItemId, sItemId) {
         // MessageToast.show(sItemId);
         return sNavigatedItemId === sItemId;
       },
 
       onAfterRendering: async function () {
-        // sap.ui.getCore().byId("container-chat---App--sideNavigation").setExpanded(false);
+
         const url = 'https://indb-embedding.cfapps.eu12.hana.ondemand.com/get_all_projects';
         const options = { method: 'GET' };
 
@@ -388,14 +875,75 @@ sap.ui.define(
           this.getView().setModel(oSettingsModel, 'settings');
 
           console.log(data);
+
+          /**
+           * [TODO]
+           * Method to access DOM of the control to remove No Wrap style of the text control
+           * Issue: DOM is not loaded yet.
+           */
+          // const oListItem = sap.ui.getCore().byId("container-chat---App--idList");
+          // const aItems = oListItem.getItems(); // Get an array of items
+          // aItems.forEach(function (oItem) { // Use forEach
+          //   const oObjectAttribute = oItem.getAggregation("attributes")[0];
+          //   console.log(oObjectAttribute);
+
+          //   const oText = oObjectAttribute.getAggregation("_textControl");
+          //   console.log(oText);
+          //   console.log(oText.getDomRef());
+          //   oText.getDomRef().classList.remove("sapMTextNoWrap");
+          // });
         } catch (error) {
           console.error(error);
         }
+
+        var catVizFrame = sap.ui.getCore().byId("container-chat---App--piechartContainerVizFrame");
+        // console.log(catVizFrame);
+        // catVizFrame.setModel(catJsonModel, "cat");
+
+        // var FIORI_LABEL_FORMAT_2 = "__UI5__FloatMaxFraction2";
+        var oPopOverPie = sap.ui.getCore().byId("container-chat---App--idPopOverPie");
+        console.log(oPopOverPie);
+        oPopOverPie.connect(catVizFrame.getVizUid());
+
+        var colVizFrame = sap.ui.getCore().byId("container-chat---App--chartContainerVizFrame");
+        // console.log(catVizFrame);
+        // catVizFrame.setModel(catJsonModel, "cat");
+
+        // var FIORI_LABEL_FORMAT_2 = "__UI5__FloatMaxFraction2";
+        var oPopOverCol = sap.ui.getCore().byId("container-chat---App--idPopOverCol");
+        console.log(oPopOverCol);
+        oPopOverCol.connect(colVizFrame.getVizUid());
+      },
+
+      onSearchPress: function (oEvent) {
+        this.byId("pageContainer").to(this.getView().createId("page2"));
+        this.byId("sideNavigation").setSelectedKey("page2");
+      },
+      onKBPress: function (oEvent) {
+        this.byId("pageContainer").to(this.getView().createId("page6"));
+        this.byId("sideNavigation").setSelectedKey("page6");
+      },
+      onCockpitPress: function (oEvent) {
+        this.byId("pageContainer").to(this.getView().createId("page3"));
+        this.byId("sideNavigation").setSelectedKey("page3");
       },
 
       onItemSelect: function (oEvent) {
         var oItem = oEvent.getParameter("item");
         this.byId("pageContainer").to(this.getView().createId(oItem.getKey()));
+
+        /** Phone ONLY */
+        var rangeName = Device.media.getCurrentRange("StdExt").name;
+        if (rangeName == "Phone") {
+          var oToolPage = this.byId("toolPage");
+          var bSideExpanded = oToolPage.getSideExpanded();
+
+          this._setToggleButtonTooltip(bSideExpanded);
+
+          oToolPage.setSideExpanded(!oToolPage.getSideExpanded());
+        }
+        console.log(rangeName);
+
         // sap.ui.getCore().byId("container-chat---App--sideNavigation").setExpanded(false);
       },
 
@@ -426,7 +974,44 @@ sap.ui.define(
       },
 
       formatMatchingScore: function (value) {
-        return parseSimilarityToPercentage(value);
+        // return parseSimilarityToPercentage(value);
+        return Math.round(value * 10000) / 10000;
+
+        // return value*100
+        // switch (sStatus) {
+        //   case "Normal":
+        //     return "sap-icon://message-success";
+        //   case "Fault":
+        //     return "sap-icon://alert";
+        //   case "Maintenance":
+        //     return "sap-icon://error";
+        //   default:
+        //     return "sap-icon://machine";
+        // }
+      },
+
+
+      formatPercentValue: function (value) {
+        // return parseSimilarityToPercentage(value);
+        return Math.round(value * 100);
+
+        // return value*100
+        // switch (sStatus) {
+        //   case "Normal":
+        //     return "sap-icon://message-success";
+        //   case "Fault":
+        //     return "sap-icon://alert";
+        //   case "Maintenance":
+        //     return "sap-icon://error";
+        //   default:
+        //     return "sap-icon://machine";
+        // }
+      },
+
+      formatDisplayValue: function (value) {
+        // return parseSimilarityToPercentage(value);
+        return Math.round(value * 100) + "%";
+
         // return value*100
         // switch (sStatus) {
         //   case "Normal":
@@ -454,7 +1039,7 @@ sap.ui.define(
             // this.byId("searchField").setVisible(true);
             this.byId("spacer").setVisible(true);
             // this.byId("searchButton").setVisible(false);
-            MessageToast.show("Screen width is corresponding to Large Desktop");
+            // MessageToast.show("Screen width is corresponding to Large Desktop");
             break;
 
           // Tablet - Landscape
@@ -466,7 +1051,7 @@ sap.ui.define(
             // this.byId("searchField").setVisible(true);
             this.byId("spacer").setVisible(true);
             // this.byId("searchButton").setVisible(false);
-            MessageToast.show("Screen width is corresponding to Desktop");
+            // MessageToast.show("Screen width is corresponding to Desktop");
             break;
 
           // Tablet - Portrait
@@ -476,7 +1061,7 @@ sap.ui.define(
             // this.byId("searchButton").setVisible(true);
             // this.byId("searchField").setVisible(false);
             this.byId("spacer").setVisible(false);
-            MessageToast.show("Screen width is corresponding to Tablet");
+            // MessageToast.show("Screen width is corresponding to Tablet");
             break;
 
           case "Phone":
@@ -485,9 +1070,16 @@ sap.ui.define(
             this.byId("sideNavigation").setVisible(true);
             // this.byId("searchField").setVisible(false);
             this.byId("spacer").setVisible(false);
-            this.byId("productName").setVisible(false);
+            this.byId("productName").setVisible(true);
+            // this.byId("productName").setTitleStyle("{ fontSize: '0.2em'}");
+            console.log(this.byId("productName").getTitleStyle());
+            // this.byId("productName").setStyle("fontSize", "20px");
+            this.byId("productName").setTitleStyle("H6");
             this.byId("secondTitle").setVisible(false);
-            MessageToast.show("Screen width is corresponding to Phone");
+            this.byId("profile").setVisible(false);
+            // MessageToast.show("Screen width is corresponding to Phone");
+            console.log(document.getElementById("container-chat---App--demoGrid-item-container-chat---App--pieCard"));
+            // document.getElementById("container-chat---App--demoGrid-item-container-chat---App--pieCard").style.gridArea="span 7 / span 5";
             break;
           default:
             break;
