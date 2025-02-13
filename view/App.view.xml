@@ -66,7 +66,7 @@
 					</layoutData>
 				</ToolbarSeparator>
 				<OverflowToolbarButton icon="sap-icon://action-settings" type="Transparent" text="Settings"/> -->
-				<Button icon="sap-icon://da" type="Emphasized" tooltip="Joule" press="onJoule">
+				<Button visible="false" icon="sap-icon://da" type="Emphasized" tooltip="Joule" press="onJoule">
 					<layoutData>
 						<OverflowToolbarLayoutData priority="NeverOverflow"/>
 					</layoutData>
@@ -153,7 +153,7 @@
 									<Button icon="sap-icon://sys-help" press="onSearchPress" text="Need help with a new advisory?" class="sapUiTinyMargin"/>
 									<Button icon="sap-icon://search" press="onKBPress" text="Search up knowledge base" class="sapUiTinyMargin"/>
 									<Button icon="sap-icon://learning-assistant" press="onCockpitPress" text="Cluster Analysis to Advisories Performance" class="sapUiTinyMargin"/>
-									<Button icon="sap-icon://da" press="onJoule" text="Talk to Joule for Insights" class="sapUiTinyMargin"/>
+									<Button visible="false" icon="sap-icon://da" press="onJoule" text="Talk to Joule for Insights" class="sapUiTinyMargin"/>
 								</additionalContent>
 							</IllustratedMessage>
                         </content>
@@ -217,8 +217,7 @@
                                     </f:customLayout>
                                 <!-- <items> -->
                                     <f:GridListItem
-                                        detailPress="onDetailPress"
-                                        press="onPress"
+                                        press="onGridListItemPressForProjectDetails"
                                         highlight="Information"
                                         type="Active">
                                     <VBox height="100%" justifyContent="SpaceBetween">
@@ -648,7 +647,9 @@
                         <headerContent>
                             <Title text="Knowledge Base" class="sapUiSmallMargin"/>
 							<ToolbarSpacer />
-							<SearchField liveChange=".onSearch" width="55%"/>
+							<Label text="Filter by:" labelFor="state"/>
+							<!-- <SearchField liveChange=".onSearch" width="55%"/> -->
+							<SearchField id="state" placeholder="Enter project/request ID..." change=".onSearch" width="55%"/>
                         </headerContent>
                         <content>
 							<List
@@ -690,6 +691,16 @@
 											state="Success" />
 									</firstStatus>
 									<ObjectAttribute class="sapMTextWrap" title="Solution" text="{projects>solution}" />
+									<ObjectAttribute class="sapMTextWrap" title="" text="{
+										path: 'projects>project_date',
+										type: 'sap.ui.model.type.Date',
+										formatOptions: {
+											style: 'medium',
+											source: {
+												pattern: 'EEE, dd MMM yyyy HH:mm:ss zzz'
+											}
+										}
+									}" />
 								</ObjectListItem>
 							</List>
 

@@ -7,13 +7,8 @@ require('dotenv').config();
 var app = express();
 app.use(express.static(__dirname));
 
-// Root path to retrieve Index.html
-// app.get('/', function (req, res) {
-//     res.sendFile(path.join(__dirname, 'views/index.html'));
-// });
-
-app.get('/getvar', function (req, res) {
-    var xvar = process.env.TEST_ENV_VARIABLE;
+app.get('/getenvironmentvariables', function (req, res) {
+    var xvar = process.env.PY_ENDPOINT;
     res.setHeader('Content-Type', 'application/json')
     res.status(200)
     res.send(JSON.stringify(xvar))

@@ -27,6 +27,29 @@ sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/json/JSONModel", "sap/f/
       var oProductsModel = new JSONModel(sap.ui.require.toUrl("chat/mockdata/products.json"));
       oProductsModel.setSizeLimit(1000);
       this.setModel(oProductsModel, "products");
+
+      /** NODEJS ENVIRONMENT VARIABLE MANAGEMENT */
+      fetch("/getenvironmentvariables") // Call your endpoint
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`); // Handle errors
+          }
+          return response.json(); // Parse the JSON response
+        })
+        .then(data => {
+          const pyEndpoint = data; // Assign the value
+          console.log("Python endpoint:", pyEndpoint);
+
+          var oModel = new JSONModel({ pyEndpoint: pyEndpoint });
+          sap.ui.getCore().setModel(oModel, "endpoint");
+        })
+        .catch(error => {
+          console.error("Error fetching environment variable:", error);
+          // Handle the error appropriately, e.g., display an error message
+          // in your UI.
+          // Example:
+          // sap.m.MessageToast.show("Error loading configuration.");
+        });
     },
 
     /**
