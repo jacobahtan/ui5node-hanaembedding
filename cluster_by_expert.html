@@ -107,16 +107,23 @@
             opacity: 1;
         }
 
-        #chart svg { /* Target the SVG inside #chart */
-            width: 100%; /* Make SVG responsive */
-            height: auto; /* Maintain aspect ratio */
+        #chart svg {
+            /* Target the SVG inside #chart */
+            width: 100%;
+            /* Make SVG responsive */
+            height: auto;
+            /* Maintain aspect ratio */
         }
 
         /* Media query for smaller screens */
-        @media (max-width: 600px) { /* Adjust breakpoint as needed */
+        @media (max-width: 600px) {
+
+            /* Adjust breakpoint as needed */
             #chart svg {
-                width: 100%; /* Occupy full width */
-                height: auto; /* Maintain aspect ratio */
+                width: 100%;
+                /* Occupy full width */
+                height: auto;
+                /* Maintain aspect ratio */
             }
         }
     </style>
@@ -134,20 +141,48 @@
         const height = 600 - margin.top - margin.bottom;
 
         const svg = d3.select("#chart").append("svg")
-        .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`) // Set viewBox
-        .attr("preserveAspectRatio", "xMidYMid meet") // Preserve aspect ratio and fit
-        .attr("width", "100%") // Make the SVG responsive
-        .attr("height", "auto")
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+            .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`) // Set viewBox
+            .attr("preserveAspectRatio", "xMidYMid meet") // Preserve aspect ratio and fit
+            .attr("width", "100%") // Make the SVG responsive
+            .attr("length", "auto")
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
         const color = d3.scaleOrdinal(d3.schemePastel1);
 
+        var ALL_CLUSTER_EP, CLUSTER_DESC_EP;
 
-        const apiUrlPoints = "https://indb-embedding.cfapps.eu12.hana.ondemand.com/get_clusters";
-        const apiUrlDescriptions = "https://indb-embedding.cfapps.eu12.hana.ondemand.com/get_clusters_description";
+        /** NODEJS ENVIRONMENT VARIABLE MANAGEMENT */
+        fetch("/getenvironmentvariables") // Call your endpoint
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`); // Handle errors
+                }
+                return response.json(); // Parse the JSON response
+            })
+            .then(data => {
+                const pyEndpoint = data; // Assign the value
+                console.log("Python endpoint:", pyEndpoint);
 
-        Promise.all([d3.json(apiUrlPoints), d3.json(apiUrlDescriptions)])
+                ALL_CLUSTER_EP = pyEndpoint + "/get_clusters";
+                CLUSTER_DESC_EP = pyEndpoint + "/get_clusters_description";
+
+                var oModel = new JSONModel({ pyEndpoint: pyEndpoint });
+                sap.ui.getCore().setModel(oModel, "endpoint");
+            })
+            .catch(error => {
+                console.error("Error fetching environment variable:", error);
+                // Handle the error appropriately, e.g., display an error message
+                // in your UI.
+                // Example:
+                // sap.m.MessageToast.show("Error loading configuration.");
+            });
+
+
+        // const apiUrlPoints = "https://indb-embedding.cfapps.eu12.hana.ondemand.com/get_clusters";
+        // const apiUrlDescriptions = "https://indb-embedding.cfapps.eu12.hana.ondemand.com/get_clusters_description";
+
+        Promise.all([d3.json(ALL_CLUSTER_EP), d3.json(CLUSTER_DESC_EP)])
             .then(([pointsData, descriptionsData]) => {
                 const descriptionMap = new Map();
                 descriptionsData.forEach(d => {
@@ -183,7 +218,7 @@
                         d3.select(".tooltip")
                             .transition().duration(200).style("opacity", .9);
                         d3.select(".tooltip")
-                            .html(`Project Number: ${d.PROJECT_NUMBER}<br>X: ${d.x}<br>Y: ${d.y}<br>Cluster: ${d.CLUSTER_DESCRIPTION}`)
+                            .html(`Project Number: ${d.PROJECT_NUMBER}<br>X: ${d.x}<br>Y: ${d.y}<br>Cluster ID: ${d.CLUSTER_ID}<br>Cluster: ${d.CLUSTER_DESCRIPTION}`)
                             .style("left", (event.pageX) + "px")
                             .style("top", (event.pageY - 28) + "px");
                     })
@@ -195,7 +230,7 @@
                         showBubbleDetails(d);
                         // Show toast message
                         // showToast(`Project Number: ${d.PROJECT_NUMBER}<br>X: ${d.x}<br>Y: ${d.y}<br>Cluster: ${d.CLUSTER_DESCRIPTION}`);
-                        showToast(`Project Number: ${d.PROJECT_NUMBER}<br>Cluster: ${d.CLUSTER_DESCRIPTION}`);
+                        showToast(`Project Number: ${d.PROJECT_NUMBER}<br>Cluster ID: ${d.CLUSTER_ID}<br>Cluster: ${d.CLUSTER_DESCRIPTION}`);
                     })
                     .transition().duration(500).attr("r", d => radius(10));
 

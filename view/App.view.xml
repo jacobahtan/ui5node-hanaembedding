@@ -19,7 +19,7 @@
 					id="sideNavigationToggleButton"
 					icon="sap-icon://menu2"
 					type="Transparent"
-					press=".onSideNavButtonPress">
+					press=".onSideNavMenuButtonPress">
 					<layoutData>
 						<OverflowToolbarLayoutData priority="NeverOverflow" />
 					</layoutData>
@@ -116,7 +116,7 @@
 				visible="{= ${device>/system/phone}}"
 				expanded="false"
 				selectedKey="{nav>/selectedKey}"
-				itemSelect=".onItemSelect">
+				itemSelect=".onNavItemSelect">
 				<tnt:NavigationList items="{path: 'nav>/navigation'}">
 					<tnt:NavigationListItem
 						text="{nav>title}"
@@ -177,8 +177,7 @@
                         <headerContent>
                             <Title text="Advisory Buddy Search Tool" class="sapUiSmallMargin"/>
                             <ToolbarSpacer />
-                            <!-- <Button icon="sap-icon://delete" tooltip="{i18n>delete}" press=".onDeleteChat" binding="{/deleteChatSession(...)}" />
-                            <Button icon="sap-icon://save" tooltip="{i18n>delete}" press=".onTest" /> -->
+                            <!-- <Button icon="sap-icon://delete" tooltip="{i18n>delete}" press=".onDeleteChat" binding="{/deleteChatSession(...)}" /> -->
                         </headerContent>
                         <content>
 							<MessageStrip
@@ -240,31 +239,11 @@
 												<Label text="Similarity score:" wrapping="true" />
 												<tnt:InfoLabel text="{path: 'search>SIMILARITY', formatter: '.formatMatchingScore'}" colorScheme="{path: 'search>SIMILARITY', formatter: '.formatMatchingScoreColor'}" />
 											</HBox>
-											<!-- <HBox alignItems="Center">
-												<Label text="Match strength:" wrapping="true" />
-												<ProgressIndicator
-													width="200px"
-													class="sapUiSmallMarginBottom"
-													percentValue="{path: 'search>SIMILARITY', formatter: '.formatPercentValue'}"
-													displayValue="{path: 'search>SIMILARITY', formatter: '.formatDisplayValue'}"
-													showValue="true"
-													state="Success" />
-											</HBox> -->
                                         </VBox>
 										
 										<OverflowToolbar design="Solid" class="sapContrast">
 											<Button icon="sap-icon://hint" type="Transparent" press="onCoinStar"/>
 											<ToolbarSpacer />
-											<!-- <f:AvatarGroup 
-												groupType="Group"
-												tooltip="Avatar Group"
-												avatarDisplaySize="XS"
-												press="onGroupPress"
-												>
-												<f:AvatarGroupItem initials="hello"
-													fallbackIcon="sap-icon://user"
-													 />
-											</f:AvatarGroup> -->
 											<Button icon="sap-icon://add-favorite" type="Transparent" press="onAddFav"/>
 											<Button icon="sap-icon://copy" type="Transparent" press="onCopy"/>
 											<Button icon="sap-icon://call" type="Transparent" press="onCall"/>
@@ -344,7 +323,7 @@
 									<card:Header title="Cluster Analysis of Trending Cluster Categories" subtitle="Grouping &amp; Comparing Advisories Requests by Cluster" />
 								</f:header>
 								<f:content>
-									<html:iframe id="chart" src="scatterchart.html" style="-webkit-transform: scale(1); transform: scale(1); -webkit-transform-origin: 0 0; transform-origin: 0 0;" frameBorder="0" height="900px" width="100%" scrolling="yes"/>
+									<html:iframe id="chart" src="cluster_category_analysis.html" style="-webkit-transform: scale(1); transform: scale(1); -webkit-transform-origin: 0 0; transform-origin: 0 0;" frameBorder="0" height="900px" width="100%" scrolling="yes"/>
 								</f:content>
 							</f:Card>
 
@@ -404,7 +383,7 @@
 											contentChange="attachContentChange"
 											title="">
 											<suite:dimensionSelectors>
-												<Select id="idoSelect1" change="handleSelectionChange">
+												<Select id="idoSelect1" change="onColChartHandleSelectionChange">
 													<core:Item key="Archie" text="Projects by Archie"/>
 													<core:Item key="Chris" text="Projects by Chris"/>
 													<core:Item key="Emma" text="Projects by Emma"/>
@@ -558,7 +537,6 @@
                             <Title text="SAGenAICity - AskTheCity Chatbot  🤖" class="sapUiSmallMargin"/>
                             <ToolbarSpacer />
                             <Button icon="sap-icon://delete" tooltip="{i18n>delete}" press=".onDeleteChat" binding="{/deleteChatSession(...)}" />
-                            <Button icon="sap-icon://save" tooltip="{i18n>delete}" press=".onTest" />
                         </headerContent>
                         <content>
 						<MessageStrip
@@ -630,7 +608,7 @@
 												],
 												formatter: '.isNavigated'
 											}"
-										press="onProjectPress">
+										press="onKBProjectPress">
 										<cells>
 											<ObjectIdentifier title="ID #{projects>project_number}" text="{projects>project_date}" />
 											<ObjectIdentifier title="{projects>topic}" text="{projects>solution}" />
@@ -648,14 +626,14 @@
                             <Title text="Knowledge Base" class="sapUiSmallMargin"/>
 							<ToolbarSpacer />
 							<Label text="Filter by:" labelFor="state"/>
-							<!-- <SearchField liveChange=".onSearch" width="55%"/> -->
-							<SearchField id="state" placeholder="Enter project/request ID..." change=".onSearch" width="55%"/>
+							<!-- <SearchField liveChange=".onKBSearch" width="55%"/> -->
+							<SearchField id="state" placeholder="Enter project/request ID..." change=".onKBSearch" width="55%"/>
                         </headerContent>
                         <content>
 							<List
 								id="idList"
 								items="{projects>/all_projects}"
-								selectionChange=".onSelectionChange"
+								selectionChange=".onKBSelectionChange"
 								growing="true"
 								growingThreshold="50"
 								includeItemInSelection="true">
@@ -677,7 +655,7 @@
 								<ObjectListItem
 									title="{projects>topic}"
 									type="Active"
-									press="onListItemPress"
+									press="onKBListItemPress"
 									number="{projects>project_number}"
 									numberUnit="Request ID"
 									>
@@ -725,7 +703,6 @@
                 <Title text="SAGenAICity - AskTheCity Chatbot  🤖" class="sapUiSmallMargin"/>
                 <ToolbarSpacer />
                 <Button icon="sap-icon://delete" tooltip="{i18n>delete}" press=".onDeleteChat" binding="{/deleteChatSession(...)}" />
-                <Button icon="sap-icon://save" tooltip="{i18n>delete}" press=".onTest" />
             </headerContent>
             <content>
                 <List
