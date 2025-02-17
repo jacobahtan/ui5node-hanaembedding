@@ -289,10 +289,16 @@
 							</additionalContent>
 						</IllustratedMessage> -->
                         <headerContent>
-                            <Title text="Welcome Mary," class="sapUiSmallMargin"/>
+                            <Title text="Manager's Cockpit" class="sapUiSmallMargin"/>
                             <ToolbarSpacer />
                             <!-- <Button icon="sap-icon://delete" tooltip="{i18n>delete}" press=".onDeleteChat" binding="{/deleteChatSession(...)}" />
                             <Button icon="sap-icon://save" tooltip="{i18n>delete}" press=".onTest" /> -->
+							<Label text="Auto Refresh:"/>
+							<Switch change="onMgrCockpitAutoRefresh" state="false">
+								<layoutData>
+									<FlexItemData growFactor="1" />
+								</layoutData>
+							</Switch>
                         </headerContent>
                         <content>
 
@@ -318,7 +324,7 @@
 								backgroundDesign="Solid">
 							</f:FlexibleColumnLayout> -->
 
-							<f:Card id="scatterCard" width="95%" height="900px" class="sapUiTinyMarginBegin sapUiTinyMarginTop sapUiTinyMarginEnd">
+							<f:Card id="scatterCard" width="95%" height="800px" class="sapUiTinyMarginBegin sapUiTinyMarginTop sapUiTinyMarginEnd">
 								<f:header>
 									<card:Header title="Cluster Analysis of Trending Cluster Categories" subtitle="Grouping &amp; Comparing Advisories Requests by Cluster" />
 								</f:header>
@@ -328,6 +334,18 @@
 							</f:Card>
 
 							<f:GridContainer id="demoGrid" class="sapUiTinyMargin">
+
+								<f:Card id="clusterBarCard" height="800px" width="100%" class="sapUiTinyMarginBegin sapUiTinyMarginTop sapUiTinyMarginEnd">
+									<f:layoutData>
+										<f:GridContainerItemLayoutData columns="10" />
+									</f:layoutData>
+									<f:header>
+										<card:Header title="Project Distribution by Cluster" subtitle="Breakdown of Projects by Architect" />
+									</f:header>
+									<f:content>
+										<html:iframe id="clusterExpertChart" src="cluster_project_by_expert.html" style="-webkit-transform: scale(1); transform: scale(1); -webkit-transform-origin: 0 0; transform-origin: 0 0;" frameBorder="0" height="900px" width="100%" scrolling="yes"/>
+									</f:content>
+								</f:Card>
 
 								<f:Card id="pieCard" height="600px" width="100%" class="sapUiTinyMarginBegin sapUiTinyMarginTop sapUiTinyMarginEnd">
 									<f:layoutData>
@@ -360,6 +378,14 @@
 													</suite:content>
 												</suite:ChartContainerContent>
 											</suite:content>
+											<suite:toolbar>
+												<OverflowToolbar id="appToolbar">
+													<Label id="pieRefreshLabel" text=""/>
+													<ToolbarSpacer/>
+													<!-- <Button id="btnAction2" text="CustomAction" type="Transparent" press="onCustomActionPress"></Button> -->
+													<suite:ChartContainerToolbarPlaceholder></suite:ChartContainerToolbarPlaceholder>
+												</OverflowToolbar>
+											</suite:toolbar>
 										</suite:ChartContainer>
 									</f:content>
 								</f:Card>
@@ -383,7 +409,8 @@
 											contentChange="attachContentChange"
 											title="">
 											<suite:dimensionSelectors>
-												<Select id="idoSelect1" change="onColChartHandleSelectionChange">
+												<Select id="idoSelect1" change="onColChartHandleSelectionChange" 
+												valueState="Information" valueStateText="Chart results will be filtered by the selected expert.">
 													<core:Item key="Archie" text="Projects by Archie"/>
 													<core:Item key="Chris" text="Projects by Chris"/>
 													<core:Item key="Emma" text="Projects by Emma"/>
@@ -407,7 +434,68 @@
 													</suite:content>
 												</suite:ChartContainerContent>
 											</suite:content>
+											<suite:toolbar>
+												<OverflowToolbar>
+													<ToolbarSpacer/>
+													<Label id="colRefreshLabel" text=""/>
+													<!-- <Button id="btnAction2" text="CustomAction" type="Transparent" press="onCustomActionPress"></Button> -->
+													<suite:ChartContainerToolbarPlaceholder></suite:ChartContainerToolbarPlaceholder>
+												</OverflowToolbar>
+											</suite:toolbar>
 										</suite:ChartContainer>
+									</f:content>
+								</f:Card>
+
+								<f:Card id="categoryManagementCard" height="800px" width="100%" class="sapUiTinyMarginBegin sapUiTinyMarginTop sapUiTinyMarginEnd">
+									<f:layoutData>
+										<f:GridContainerItemLayoutData columns="10" />
+									</f:layoutData>
+									<f:header>
+										<card:Header title="Cluster Category Management" subtitle="Update Category Labels &amp; Cluster Descriptions" />
+									</f:header>
+									<f:content>
+									<Table id="editableTable" items="{categorymgmt>/clusters}">
+										<headerToolbar>
+											<OverflowToolbar id="otbSubheader">
+												<Title text="" level="H2" />
+												<ToolbarSpacer />
+												<!-- <Button id="editButton" text="Edit" type="Transparent"
+													press="onEdit" /> -->
+												<!-- <Button id="saveButton" text="Save" icon="sap-icon://save" type="Transparent"
+													press="onSave" visible="true" /> -->
+												<!-- <Button id="cancelButton" text="Cancel" type="Transparent"
+													press="onCancel" visible="false" /> -->
+												<Button text="Edit" press="onCatMgmtEdit" visible="{= ${categorymgmt>/isEditMode} === false }" />
+												<Button text="Cancel" press="onCatMgmtCancel" visible="{= ${categorymgmt>/isEditMode} === true }" />
+												<Button text="Save" press="onCatMgmtSave" visible="{= ${categorymgmt>/isEditMode} === true }" />
+											</OverflowToolbar>
+										</headerToolbar>
+										<columns>
+											<Column width="3em"><Text text="ID" /></Column>
+											<Column width="20em"><Text text="Cluster Description" /></Column>
+											<Column width="12em"><Text text="Category Label" /></Column>
+										</columns>
+										<items>
+											<ColumnListItem>
+												<cells>
+													<!-- Cluster ID (Non-editable) -->
+													<Text text="{categorymgmt>cluster_id}" />
+													<!-- Cluster Description (Editable) -->
+													<!-- <Text text="{cluster>cluster_description}" /> -->
+													<!-- <Text text="{categorymgmt>cluster_description}" visible="{= ${categorymgmt>/isEditMode} === false }" /> -->
+													
+													<!-- Category Label (Editable) -->
+													<!-- <Text text="{cluster>category_label}" /> -->
+													<!-- <Text text="{categorymgmt>category_label}" visible="{= ${categorymgmt>/isEditMode} === false }" /> -->
+													<Input width="" value="{categorymgmt>cluster_description}" editable="{= ${categorymgmt>/isEditMode} === true }" visible="true"/>
+													<Input value="{categorymgmt>category_label}" editable="{= ${categorymgmt>/isEditMode} === true }" visible="true" />
+													
+
+												</cells>
+											</ColumnListItem>
+										</items>
+									</Table>
+
 									</f:content>
 								</f:Card>
 

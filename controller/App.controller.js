@@ -17,8 +17,10 @@ sap.ui.define(
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
     "sap/viz/ui5/data/FlattenedDataset",
-    "sap/viz/ui5/controls/common/feeds/FeedItem"],
-  function (Log, BaseController, tntLib, Device, JSONModel, MessageToast, require, FlexibleColumnLayout, Fragment, DragInfo, DropInfo, GridDropInfo, coreLibrary, Filter, FilterOperator, FlattenedDataset, FeedItem) {
+    "sap/viz/ui5/controls/common/feeds/FeedItem",
+    'sap/viz/ui5/controls/Popover',
+    'sap/ui/core/HTML',],
+  function (Log, BaseController, tntLib, Device, JSONModel, MessageToast, require, FlexibleColumnLayout, Fragment, DragInfo, DropInfo, GridDropInfo, coreLibrary, Filter, FilterOperator, FlattenedDataset, FeedItem, Popover, HTMLControl) {
 
     /**
      * ENVIRONMENT VARIABLE MANAGEMENT
@@ -45,6 +47,8 @@ sap.ui.define(
     const MSTEAMS_URL = "https://teams.microsoft.com/l/meetup-join/group/SOME_LONG_ID";
     const HANA_EMB_SEARCH_SCHEMANAME = "DBUSER";
     const HANA_EMB_SEARCH_TABLENAME = "TCM_AUTOMATIC";
+
+    var pieCategoryData;
 
 
     // shortcut for sap.ui.core.dnd.DropLayout
@@ -145,6 +149,56 @@ sap.ui.define(
       return transformedData;
     }
 
+    async function getClusterData() {
+      try {
+        const responses = await Promise.all([
+          fetch('https://indb-embedding.cfapps.eu12.hana.ondemand.com/get_clusters'),
+          fetch('https://indb-embedding.cfapps.eu12.hana.ondemand.com/get_clusters_description'),
+          fetch('https://indb-embedding.cfapps.eu12.hana.ondemand.com/get_all_project_categories')
+        ]);
+
+        const [clustersResponse, descriptionsResponse, categoriesResponse] = await Promise.all(responses.map(res => res.json()));
+
+        // Create a map for cluster descriptions for quick lookup
+        const descriptionMap = descriptionsResponse.reduce((acc, desc) => {
+          acc[desc.CLUSTER_ID] = desc.CLUSTER_DESCRIPTION.trim(); // Trim whitespace
+          return acc;
+        }, {});
+
+        // Create a map for project categories
+        const categoryMap = categoriesResponse.project_categories.reduce((acc, cat) => {
+          acc[cat.PROJECT_ID] = cat.category_label;
+          return acc;
+        }, {});
+
+
+        const uniqueClusters = {};
+
+        clustersResponse.forEach(cluster => {
+          const cluster_id = cluster.CLUSTER_ID;
+          const project_number = cluster.PROJECT_NUMBER;
+          const category_label = categoryMap[project_number];
+          const cluster_description = descriptionMap[cluster_id];
+
+          if (cluster_description && category_label) { // Ensure both description and category exist.
+            if (!uniqueClusters[cluster_id]) {
+              uniqueClusters[cluster_id] = {
+                cluster_id: cluster_id,
+                cluster_description: cluster_description,
+                category_label: category_label
+              }
+            }
+          }
+        });
+
+        return Object.values(uniqueClusters); // Return the unique records as an array
+
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        return []; // Return an empty array in case of error
+      }
+    }
+
     return BaseController.extend("chat.controller.App", {
       onJoule: function () {
         if (document.getElementById("cai-webclient-main").style.display == "block") {
@@ -162,6 +216,7 @@ sap.ui.define(
 
         var oModel = this.getView().getModel("search");
         var gridlistitemcontextdata = oModel.getProperty(oEvent.getSource().oBindingContexts.search.sPath);
+        console.log(gridlistitemcontextdata);
         var projID = gridlistitemcontextdata.project_number;
 
         const getprojdeturl = PROJECT_DETAILS_EP + '?project_number=' + projID;
@@ -205,7 +260,7 @@ sap.ui.define(
         } catch (error) {
           console.error("In onGridListItemPressForProjectDetails:");
           console.error(error);
-          MessageToast.show("Sorry, unable to retrieve project details. Click on Show More...");
+          MessageToast.show("Uh-oh, unable to retrieve project details.");
         }
 
       },
@@ -635,10 +690,138 @@ sap.ui.define(
         }
       },
 
+      onCatMgmtEdit: function () {
+        // Enable edit mode
+        const oModel = this.getView().getModel("categorymgmt");
+        oModel.setProperty("/isEditMode", true);
+      },
+
+      onCatMgmtCancel: function () {
+        // Revert to original data and disable edit mode
+        const oModel = this.getView().getModel("categorymgmt");
+        const originalData = oModel.getProperty("/originalData");
+        oModel.setProperty("/clusters", JSON.parse(JSON.stringify(originalData))); // Restore original data
+        oModel.setProperty("/isEditMode", false);
+      },
+
+      onCatMgmtSave: function () {
+        // Get the updated data from the model
+        const oModel = this.getView().getModel("categorymgmt");
+        const updatedData = oModel.getProperty("/clusters");
+        oModel.setProperty("/isEditMode", false);
+
+        // Transform the data into the required format
+        const payload = {};
+        updatedData.forEach((item) => {
+          payload[item.category_label] = item.cluster_description;
+        });
+
+        console.log(payload);
+
+        MessageToast.show("Uh-oh, seems like there's some issue with the API call to update.");
+
+        // Send the transformed data to the server via POST request
+        // fetch("https://indb-embedding.cfapps.eu12.hana.ondemand.com/update_categories_and_projects", {
+        //   method: "POST",
+        //   headers: {
+        //     "Content-Type": "application/json"
+        //   },
+        //   body: JSON.stringify(payload)
+        // })
+        //   .then((response) => {
+        //     if (response.ok) {
+        //       MessageToast.show("Cluster data updated successfully!");
+        //     } else {
+        //       throw new Error("Failed to update cluster data");
+        //     }
+        //   })
+        //   .catch((error) => {
+        //     console.error("Error updating cluster data:", error);
+        //     MessageToast.show("Error updating cluster data. Please try again.");
+        //   });
+      },
+
+      onMgrCockpitAutoRefresh: async function (oEvent) {
+        /** [TODO] AUTO REFRESH FEATURE
+         * 1. Cluster Analysis main chart (d3): refresh overalls
+         * 2. Project Distribution chart (d3): disable auto refresh, refresh overalls
+         * 3. Project Breakdown Piechart (sapui5): refresh overalls
+         * 4. Project Workload Column Chart (sapui5): refresh overalls with filtered expert
+         */
+        // this.setAppBusy(false);
+        var oState = oEvent.getParameter("state");
+
+        const now = new Date();
+        const formattedDateTime = now.toLocaleString(); // Or customize the format
+
+        console.log(oState);
+        if (oState) {
+
+          localStorage.setItem("AUTO-REFRESH", "true");
+
+          //* 3. Project Breakdown Piechart (sapui5): refresh overalls
+          this.getView().byId("pieRefreshLabel").setText("Last refreshed at " + formattedDateTime);
+
+          //* 4. Project Workload Column Chart (sapui5): refresh overalls with filtered expert
+          this.getView().byId("colRefreshLabel").setText("Last refreshed at " + formattedDateTime);
+          
+          const selectedExpert = this.getView().byId("idoSelect1").getSelectedKey();
+          const url = ALL_PROJECTS_BY_EXPERT_EP + '?expert=' + selectedExpert;
+          var vizFrame = this.getView().byId(this._constants.vizFrame.id);
+          const options = { method: 'GET' };
+          const response = await fetch(url, options);
+          const data = await response.json();
+          var oModel = new JSONModel(data);
+          vizFrame.setModel(oModel);
+          // vizFrame.vizUpdate();
+
+
+        }
+        else {
+          localStorage.setItem("AUTO-REFRESH", "false");
+        }
+      },
+
       onInit: async function () {
         /** [TODO] Learning Plan Assignment */
         // this.initMockDataForLearningPlanAssignmentDragDrop();
         // this.attachDragAndDrop();
+
+        /** [TODO] Toggle Edit & Save for Table */
+        // this.oEditableTemplate = new ColumnListItem({
+        //   cells: [
+        //     new Input({
+        //       value: "{cluster>cluster_id}"
+        //     }), new Input({
+        //       value: "{cluster>cluster_description}"
+        //     }), new Input({
+        //       value: "{cluster>category_label}"
+        //     })
+        //   ]
+        // });
+
+
+
+
+
+        // Example usage:
+        getClusterData()
+          .then(data => {
+            pieCategoryData = data;
+            console.log(JSON.stringify(data, null, 2)); // Nicely formatted output
+            // Fetch data from API and bind to the model
+            const oModel = new JSONModel();
+            oModel.setData({
+              clusters: data,
+              originalData: data, // Backup of original data for cancel functionality
+              isEditMode: false // Edit mode flag
+            }); // Bind data to the model
+            this.getView().setModel(oModel, "categorymgmt");
+
+            oModel.setProperty("/originalData", JSON.parse(JSON.stringify(data))); // Deep copy for backup
+
+            // Initialize model with data and isEditMode flag
+          });
 
         var oDeviceModel = new JSONModel(Device);
         this.getView().setModel(oDeviceModel, "device");
@@ -717,6 +900,103 @@ sap.ui.define(
         }
       },
 
+      settingsModel: {
+        dataset: {
+          name: "Custom Popover",
+          defaultSelected: 0,
+          values: [{
+          }, {
+          }, {
+            name: "Custom Content Pie Chart",
+            value: null,
+            popoverProps: {
+              'customDataControl': function (data) {
+                if (data.data.val) {
+                  // console.log(pieCategoryData);
+
+                  var values = data.data.val;
+                  var divStr = "";
+                  var idx = values[1].value;
+                  console.log(values);
+
+                  // console.log("idx:", idx, "exData.length:", exData.length); // Debugging
+
+                  const categoryValueFromB = values.find(item => item.id === "Category")?.value;
+                  const matchingCluster = pieCategoryData.find(item => item.category_label === categoryValueFromB);
+                  // console.log(matchingCluster.cluster_description);
+                  var categoryDescToDisplay;
+                  if (matchingCluster) {
+                    categoryDescToDisplay = matchingCluster.cluster_description;
+                  } else {
+                    categoryDescToDisplay = "No matching description"
+                  }
+
+                  var svg = "<svg width='10px' height='10px'><path d='M-5,-5L5,-5L5,5L-5,5Z' fill='#5cbae6' transform='translate(5,5)'></path></svg>";
+                  divStr += "<div style = 'margin: 15px 30px 0 10px'>" + svg + "<b style='margin-left:10px'>" + values[0].value + "</b></div>";
+                  divStr += "<div style = 'margin: 5px 30px 0 30px'>" + "<span style = 'float: left'>" + categoryDescToDisplay + "</span><br></div>";
+                  divStr += "<div style = 'margin: 5px 30px 15px 30px'>" + "Total No. of Projects: <span style = 'float: right'>" + values[1].value + "</span></div>";
+                  return new HTMLControl({ content: divStr });
+
+                  // if (idx >= 0 && idx < exData.length) {
+                  //   var svg = "<svg width='10px' height='10px'><path d='M-5,-5L5,-5L5,5L-5,5Z' fill='#5cbae6' transform='translate(5,5)'></path></svg>";
+                  //   divStr += "<div style = 'margin: 15px 30px 0 10px'>" + svg + "<b style='margin-left:10px'>" + values[0].value + "</b></div>";
+                  //   divStr += "<div style = 'margin: 5px 30px 0 30px'>Total No. of Projects: <span style = 'float: right'>" + values[1].value + "</span></div>";
+                  //   divStr += "<div style = 'margin: 5px 30px 0 30px'>" + "<span style = 'float: right'>" + categoryDescToDisplay + "</span></div>";
+                  //   return new HTMLControl({ content: divStr });
+                  // } else {
+                  //   console.error("Index out of bounds:", idx);
+                  //   return new HTMLControl({ content: "Data not available" }); // Or return ""
+                  // }
+
+                } else {
+                  console.error("data.data.val is undefined or null"); // Handle missing data
+                  return new HTMLControl({ content: "Data not available" }); // Or return ""
+                }
+              }
+            }
+          },
+          {
+            name: "Custom Content for Column Chart",
+            value: null,
+            popoverProps: {
+              'customDataControl': function (data) {
+                if (data.data.val) {
+                  // console.log(pieCategoryData);
+
+                  var values = data.data.val;
+                  var divStr = "";
+                  var idx = values[1].value;
+                  console.log(values);
+
+                  // console.log("idx:", idx, "exData.length:", exData.length); // Debugging
+
+                  const categoryValueFromB = values.find(item => item.id === "Category")?.value;
+                  const matchingCluster = pieCategoryData.find(item => item.category_label === categoryValueFromB);
+                  // console.log(matchingCluster.cluster_description);
+                  var categoryDescToDisplay;
+                  if (matchingCluster) {
+                    categoryDescToDisplay = matchingCluster.cluster_description;
+                  } else {
+                    categoryDescToDisplay = "No matching description"
+                  }
+
+                  var svg = "<svg width='10px' height='10px'><path d='M-5,-5L5,-5L5,5L-5,5Z' fill='#5cbae6' transform='translate(5,5)'></path></svg>";
+                  divStr += "<div style = 'margin: 15px 30px 0 10px'>" + svg + "<b style='margin-left:10px'>" + values[0].value + "</b></div>";
+                  divStr += "<div style = 'margin: 5px 30px 0 30px'>" + "<span style = 'float: left'>" + categoryDescToDisplay + "</span><br><br></div>";
+                  divStr += "<div style = 'margin: 5px 30px 15px 30px'>" + "Total No. of Projects: <span style = 'float: right'>" + values[2].value + "</span></div>";
+                  return new HTMLControl({ content: divStr });
+
+
+                } else {
+                  console.error("data.data.val is undefined or null"); // Handle missing data
+                  return new HTMLControl({ content: "Data not available" }); // Or return ""
+                }
+              }
+            }
+          }]
+        }
+      },
+
       onAfterRendering: async function () {
         const options = { method: 'GET' };
 
@@ -755,10 +1035,15 @@ sap.ui.define(
         /** Methods to connect click popover on charts */
         var catVizFrame = sap.ui.getCore().byId("container-chat---App--piechartContainerVizFrame");
         var oPopOverPie = sap.ui.getCore().byId("container-chat---App--idPopOverPie");
+        /** [TODO] Improve Popover to include Cluster Desecription */
+        // var xxjson = { 'customDataControl': function (data) { if (data.data.val) { var exData = [{ "Owner": "Brooks A. Williams", "Phone": "778-721-2235" }, { "Owner": "Candice C. Bernardi", "Phone": "204-651-2434" }, { "Owner": "Robert A. Cofield", "Phone": "262-684-6815" }, { "Owner": "Melissa S. Maciel", "Phone": "778-983-3365" }, { "Owner": "Diego C. Lawton", "Phone": "780-644-4957" }, { "Owner": "Anthony K. Evans", "Phone": "N/A" }, { "Owner": "Sue K. Gonzalez", "Phone": "647-746-4119" }, { "Owner": "Nancy J. Oneal", "Phone": "N/A" }, { "Owner": "Sirena C. Mack", "Phone": "905-983-3365" }, { "Owner": "Gloria K. Bowlby", "Phone": "N/A" }]; var values = data.data.val, divStr = "", idx = values[1].value; var svg = "<svg width='10px' height='10px'><path d='M-5,-5L5,-5L5,5L-5,5Z' fill='#5cbae6' transform='translate(5,5)'></path></svg>"; divStr = divStr + "<div style = 'margin: 15px 30px 0 10px'>" + svg + "<b style='margin-left:10px'>" + values[0].value + "</b></div>"; divStr = divStr + "<div style = 'margin: 5px 30px 0 30px'>" + values[2].name + "<span style = 'float: right'>" + values[2].value + "</span></div>"; divStr = divStr + "<div style = 'margin: 5px 30px 0 30px'>" + "Owner<span style = 'float: right'>" + exData[idx].Owner + "</span></div>"; divStr = divStr + "<div style = 'margin: 5px 30px 15px 30px'>" + "Phone<span style = 'float: right'>" + exData[idx].Phone + "</span></div>"; return new HTMLControl({ content: divStr }); } } };
+        // console.log(xxjson);
+        oPopOverPie = new Popover(this.settingsModel.dataset.values[2].popoverProps);
         oPopOverPie.connect(catVizFrame.getVizUid());
 
         var colVizFrame = sap.ui.getCore().byId("container-chat---App--chartContainerVizFrame");
         var oPopOverCol = sap.ui.getCore().byId("container-chat---App--idPopOverCol");
+        oPopOverCol = new Popover(this.settingsModel.dataset.values[3].popoverProps);
         oPopOverCol.connect(colVizFrame.getVizUid());
       },
 
@@ -874,6 +1159,7 @@ sap.ui.define(
             // MessageToast.show("Screen width is corresponding to Phone");
             console.log(document.getElementById("container-chat---App--demoGrid-item-container-chat---App--pieCard"));
             // document.getElementById("container-chat---App--demoGrid-item-container-chat---App--pieCard").style.gridArea="span 7 / span 5";
+            this.byId("scatterCard").setHeight("600px");
             break;
           default:
             break;
