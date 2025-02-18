@@ -22,8 +22,19 @@
 		{
 			"title": "Manager Cockpit",
 			"icon": "sap-icon://customer-view",
-			"key": "page3",
-			"visible": true
+			"enabled": true,
+			"visible": true,
+			"expanded": true,
+			"items": [
+				{
+					"title": "Cluster Exploration",
+					"key": "page7"
+				},
+				{
+					"title": "Category Management",
+					"key": "page8"
+				}
+			]
 		},
 		{
 			"title": "Users and Groups",

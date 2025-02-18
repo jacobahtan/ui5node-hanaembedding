@@ -149,52 +149,71 @@ sap.ui.define(
       return transformedData;
     }
 
+    // async function getClusterData() {
+    //   try {
+    //     const responses = await Promise.all([
+    //       fetch('https://indb-embedding.cfapps.eu12.hana.ondemand.com/get_clusters'),
+    //       fetch('https://indb-embedding.cfapps.eu12.hana.ondemand.com/get_clusters_description'),
+    //       fetch('https://indb-embedding.cfapps.eu12.hana.ondemand.com/get_all_project_categories')
+    //     ]);
+
+    //     const [clustersResponse, descriptionsResponse, categoriesResponse] = await Promise.all(responses.map(res => res.json()));
+
+    //     // Create a map for cluster descriptions for quick lookup
+    //     const descriptionMap = descriptionsResponse.reduce((acc, desc) => {
+    //       acc[desc.CLUSTER_ID] = desc.CLUSTER_DESCRIPTION.trim(); // Trim whitespace
+    //       return acc;
+    //     }, {});
+
+    //     // Create a map for project categories
+    //     const categoryMap = categoriesResponse.project_categories.reduce((acc, cat) => {
+    //       acc[cat.PROJECT_ID] = cat.category_label;
+    //       return acc;
+    //     }, {});
+
+
+    //     const uniqueClusters = {};
+
+    //     clustersResponse.forEach(cluster => {
+    //       const cluster_id = cluster.CLUSTER_ID;
+    //       const project_number = cluster.PROJECT_NUMBER;
+    //       const category_label = categoryMap[project_number];
+    //       const cluster_description = descriptionMap[cluster_id];
+
+    //       if (cluster_description && category_label) { // Ensure both description and category exist.
+    //         if (!uniqueClusters[cluster_id]) {
+    //           uniqueClusters[cluster_id] = {
+    //             cluster_id: cluster_id,
+    //             cluster_description: cluster_description,
+    //             category_label: category_label
+    //           }
+    //         }
+    //       }
+    //     });
+
+    //     return Object.values(uniqueClusters); // Return the unique records as an array
+
+    //   } catch (error) {
+    //     console.error("Error fetching data:", error);
+    //     return []; // Return an empty array in case of error
+    //   }
+    // }
+
     async function getClusterData() {
       try {
-        const responses = await Promise.all([
-          fetch('https://indb-embedding.cfapps.eu12.hana.ondemand.com/get_clusters'),
-          fetch('https://indb-embedding.cfapps.eu12.hana.ondemand.com/get_clusters_description'),
-          fetch('https://indb-embedding.cfapps.eu12.hana.ondemand.com/get_all_project_categories')
-        ]);
+        const categoriesResponse = await fetch('https://indb-embedding.cfapps.eu12.hana.ondemand.com/get_categories');
+        const categories = await categoriesResponse.json();
 
-        const [clustersResponse, descriptionsResponse, categoriesResponse] = await Promise.all(responses.map(res => res.json()));
+        const clusterData = categories.map(category => ({
+          index: category.index,
+          category_descr: category.category_descr, // Renamed for clarity
+          category_label: category.category_label
+        }));
 
-        // Create a map for cluster descriptions for quick lookup
-        const descriptionMap = descriptionsResponse.reduce((acc, desc) => {
-          acc[desc.CLUSTER_ID] = desc.CLUSTER_DESCRIPTION.trim(); // Trim whitespace
-          return acc;
-        }, {});
-
-        // Create a map for project categories
-        const categoryMap = categoriesResponse.project_categories.reduce((acc, cat) => {
-          acc[cat.PROJECT_ID] = cat.category_label;
-          return acc;
-        }, {});
-
-
-        const uniqueClusters = {};
-
-        clustersResponse.forEach(cluster => {
-          const cluster_id = cluster.CLUSTER_ID;
-          const project_number = cluster.PROJECT_NUMBER;
-          const category_label = categoryMap[project_number];
-          const cluster_description = descriptionMap[cluster_id];
-
-          if (cluster_description && category_label) { // Ensure both description and category exist.
-            if (!uniqueClusters[cluster_id]) {
-              uniqueClusters[cluster_id] = {
-                cluster_id: cluster_id,
-                cluster_description: cluster_description,
-                category_label: category_label
-              }
-            }
-          }
-        });
-
-        return Object.values(uniqueClusters); // Return the unique records as an array
+        return clusterData;
 
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching cluster data:", error);
         return []; // Return an empty array in case of error
       }
     }
@@ -483,7 +502,7 @@ sap.ui.define(
         // console.log(sQuery);
         if (sQuery && sQuery.length > 0) {
           var filter = new Filter("project_number", FilterOperator.EQ, sQuery);
-          // var filter = new Filter("topic", FilterOperator.Contains, sQuery);
+          // var filter = new Filter("solution", FilterOperator.Contains, sQuery);
           aFilters.push(filter);
         }
 
@@ -530,6 +549,7 @@ sap.ui.define(
       },
 
       onColChartHandleSelectionChange: async function (oEvent) {
+        this.getView().byId("columnCard").setBusy(true);
         var oItem = oEvent.getParameter("selectedItem");
         const url = ALL_PROJECTS_BY_EXPERT_EP + '?expert=' + oItem.getKey();
 
@@ -542,10 +562,14 @@ sap.ui.define(
           const data = await response.json();
           var oModel = new JSONModel(data);
           vizFrame.setModel(oModel);
-          vizFrame.vizUpdate();
+          //  Seems like not required for this vizUpdate() as it requires more dataset.
+          //  https://sapui5.hana.ondemand.com/#/api/sap.viz.ui5.controls.VizFrame%23methods/vizUpdate
+          // vizFrame.vizUpdate();
+          this.getView().byId("columnCard").setBusy(false);
         } catch (error) {
           console.error("In onColChartHandleSelectionChange:");
           console.error(error);
+          this.getView().byId("columnCard").setBusy(false);
         }
       },
 
@@ -706,6 +730,7 @@ sap.ui.define(
 
       onCatMgmtSave: function () {
         // Get the updated data from the model
+        this.setAppBusy(true);
         const oModel = this.getView().getModel("categorymgmt");
         const updatedData = oModel.getProperty("/clusters");
         oModel.setProperty("/isEditMode", false);
@@ -713,98 +738,117 @@ sap.ui.define(
         // Transform the data into the required format
         const payload = {};
         updatedData.forEach((item) => {
-          payload[item.category_label] = item.cluster_description;
+          payload[item.category_label] = item.category_descr;
         });
 
         console.log(payload);
 
-        MessageToast.show("Uh-oh, seems like there's some issue with the API call to update.");
+        // MessageToast.show("Uh-oh, seems like there's some issue with the API call to update.");
 
         // Send the transformed data to the server via POST request
-        // fetch("https://indb-embedding.cfapps.eu12.hana.ondemand.com/update_categories_and_projects", {
-        //   method: "POST",
-        //   headers: {
-        //     "Content-Type": "application/json"
-        //   },
-        //   body: JSON.stringify(payload)
-        // })
-        //   .then((response) => {
-        //     if (response.ok) {
-        //       MessageToast.show("Cluster data updated successfully!");
-        //     } else {
-        //       throw new Error("Failed to update cluster data");
-        //     }
-        //   })
-        //   .catch((error) => {
-        //     console.error("Error updating cluster data:", error);
-        //     MessageToast.show("Error updating cluster data. Please try again.");
-        //   });
+        fetch("https://indb-embedding.cfapps.eu12.hana.ondemand.com/update_categories_and_projects", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        })
+          .then((response) => {
+            if (response.ok) {
+              MessageToast.show("Category data has been updated successfully!");
+            } else {
+              throw new Error("Uh-oh, seems like there's some issue with the API call to update.");
+            }
+            this.setAppBusy(false);
+          })
+          .catch((error) => {
+            console.error("Error updating category data:", error);
+            MessageToast.show("Uh-oh, seems like there's some issue with the API call to update.");
+            this.setAppBusy(false);
+          });
       },
 
-      onMgrCockpitAutoRefresh: async function (oEvent) {
+      onCatMgmtAutoRefresh: async function (oEvent) {
         /** [TODO] AUTO REFRESH FEATURE
-         * 1. Cluster Analysis main chart (d3): refresh overalls
-         * 2. Project Distribution chart (d3): disable auto refresh, refresh overalls
-         * 3. Project Breakdown Piechart (sapui5): refresh overalls
-         * 4. Project Workload Column Chart (sapui5): refresh overalls with filtered expert
-         */
-        // this.setAppBusy(false);
+        * 3. Project Breakdown Piechart (sapui5): refresh overalls
+        * 4. Project Workload Column Chart (sapui5): refresh overalls with filtered expert
+        * 5. Cat Mgmt Table refresh
+        */
         var oState = oEvent.getParameter("state");
 
-        const now = new Date();
-        const formattedDateTime = now.toLocaleString(); // Or customize the format
-
-        console.log(oState);
         if (oState) {
-
           localStorage.setItem("AUTO-REFRESH", "true");
 
-          //* 3. Project Breakdown Piechart (sapui5): refresh overalls
-          this.getView().byId("pieRefreshLabel").setText("Last refreshed at " + formattedDateTime);
+          // Store the interval ID so you can clear it later
+          if (!this._autoRefreshInterval) { // Check if it's already set
+            this._autoRefreshInterval = setInterval(async () => {
+              const now = new Date();
+              const formattedDateTime = now.toLocaleString();
 
-          //* 4. Project Workload Column Chart (sapui5): refresh overalls with filtered expert
-          this.getView().byId("colRefreshLabel").setText("Last refreshed at " + formattedDateTime);
-          
-          const selectedExpert = this.getView().byId("idoSelect1").getSelectedKey();
-          const url = ALL_PROJECTS_BY_EXPERT_EP + '?expert=' + selectedExpert;
-          var vizFrame = this.getView().byId(this._constants.vizFrame.id);
-          const options = { method: 'GET' };
-          const response = await fetch(url, options);
-          const data = await response.json();
-          var oModel = new JSONModel(data);
-          vizFrame.setModel(oModel);
-          // vizFrame.vizUpdate();
+              this.getView().byId("pieRefreshLabel").setText("Last refreshed at " + formattedDateTime);
+              this.getView().byId("colRefreshLabel").setText("Last refreshed at " + formattedDateTime);
+              this.getView().byId("catTableRefreshLabel").setText("Last refreshed at " + formattedDateTime);
+              this.getView().byId("columnCard").setBusy(true);
+              this.getView().byId("pieCard").setBusy(true);
 
+              const selectedExpert = this.getView().byId("idoSelect1").getSelectedKey();
+              const url = ALL_PROJECTS_BY_EXPERT_EP + '?expert=' + selectedExpert;
+              var vizFrame = this.getView().byId(this._constants.vizFrame.id);
 
+              try {
+                const options = { method: 'GET' };
+                const response = await fetch(url, options);
+                if (!response.ok) {
+                  throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                var oModel = new JSONModel(data);
+                vizFrame.setModel(oModel);
+
+                this.getView().byId("columnCard").setBusy(false);
+                this.getView().byId("pieCard").setBusy(false);
+              } catch (error) {
+                console.error("Error fetching data:", error);
+                // Handle error, maybe stop the interval:
+                clearInterval(this._autoRefreshInterval);
+                this._autoRefreshInterval = null; // Clear the interval ID
+                sap.m.MessageToast.show("Error loading data. Auto-refresh stopped.");
+                this.getView().byId("columnCard").setBusy(false);
+                this.getView().byId("pieCard").setBusy(false);
+              }
+            }, 5000); // 5000 milliseconds = 5 seconds
+          }
+
+        } else {
+          localStorage.setItem("AUTO-REFRESH", "false");
+          if (this._autoRefreshInterval) {
+            clearInterval(this._autoRefreshInterval);
+            this._autoRefreshInterval = null; // Important: Clear the interval ID
+          }
         }
-        else {
+      },
+
+      onClusterExpAutoRefresh: async function (oEvent) {
+        /** [TODO] AUTO REFRESH FEATURE
+        * 1. Cluster Analysis main chart (d3): refresh overalls
+        * 2. Project Distribution chart (d3): disable auto refresh, refresh overalls
+        */
+
+        var oState = oEvent.getParameter("state");
+
+        if (oState) {
+          localStorage.setItem("AUTO-REFRESH", "true");
+
+        } else {
           localStorage.setItem("AUTO-REFRESH", "false");
         }
+
       },
 
       onInit: async function () {
         /** [TODO] Learning Plan Assignment */
         // this.initMockDataForLearningPlanAssignmentDragDrop();
         // this.attachDragAndDrop();
-
-        /** [TODO] Toggle Edit & Save for Table */
-        // this.oEditableTemplate = new ColumnListItem({
-        //   cells: [
-        //     new Input({
-        //       value: "{cluster>cluster_id}"
-        //     }), new Input({
-        //       value: "{cluster>cluster_description}"
-        //     }), new Input({
-        //       value: "{cluster>category_label}"
-        //     })
-        //   ]
-        // });
-
-
-
-
-
-        // Example usage:
         getClusterData()
           .then(data => {
             pieCategoryData = data;
@@ -926,7 +970,7 @@ sap.ui.define(
                   // console.log(matchingCluster.cluster_description);
                   var categoryDescToDisplay;
                   if (matchingCluster) {
-                    categoryDescToDisplay = matchingCluster.cluster_description;
+                    categoryDescToDisplay = matchingCluster.category_descr;
                   } else {
                     categoryDescToDisplay = "No matching description"
                   }
@@ -975,7 +1019,7 @@ sap.ui.define(
                   // console.log(matchingCluster.cluster_description);
                   var categoryDescToDisplay;
                   if (matchingCluster) {
-                    categoryDescToDisplay = matchingCluster.cluster_description;
+                    categoryDescToDisplay = matchingCluster.category_descr;
                   } else {
                     categoryDescToDisplay = "No matching description"
                   }
