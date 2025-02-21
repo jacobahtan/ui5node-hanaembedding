@@ -24,9 +24,6 @@
 						<OverflowToolbarLayoutData priority="NeverOverflow" />
 					</layoutData>
 				</Button>
-				<!-- <Image height="2.5rem"
-					   class="sapUiTinyMargin"
-					   src="https://cdn-icons-gif.flaticon.com/15370/15370739.gif" /> -->
 				<Image height="2.5rem"
 					   class="sapUiTinyMargin"
 					   src="https://cdn-icons-gif.flaticon.com/17556/17556499.gif" />
@@ -41,35 +38,12 @@
 					</layoutData>
 				</Text>
 				<ToolbarSpacer />
-				<!-- <SearchField width="16rem" id="searchField">
-					<layoutData>
-						<OverflowToolbarLayoutData priority="Low" group="1"/>
-					</layoutData>
-				</SearchField>
-				 -->
 				<ToolbarSpacer id="spacer">
 					<layoutData>
 						<OverflowToolbarLayoutData priority="Low" group="1"/>
 					</layoutData>
 				</ToolbarSpacer>
-				<!-- <Button visible="false" icon="sap-icon://search" type="Transparent" id="searchButton" tooltip="Search"/>
-				<OverflowToolbarButton icon="sap-icon://source-code" type="Transparent" tooltip="Action 1" text="Action 1">
-					<layoutData>
-						<OverflowToolbarLayoutData group="2"/>
-					</layoutData>
-				</OverflowToolbarButton>
-				<OverflowToolbarButton icon="sap-icon://card" type="Transparent" tooltip="Action 2" text="Action 2">
-					<layoutData>
-						<OverflowToolbarLayoutData group="2"/>
-					</layoutData>
-				</OverflowToolbarButton>
-				<ToolbarSeparator>
-					<layoutData>
-						<OverflowToolbarLayoutData group="2"/>
-					</layoutData>
-				</ToolbarSeparator>
-				<OverflowToolbarButton icon="sap-icon://action-settings" type="Transparent" text="Settings"/> -->
-				<Button visible="false" icon="sap-icon://da" type="Emphasized" tooltip="Joule" press="onJoule">
+				<Button id="jouleBtn" visible="false" icon="sap-icon://da" type="Emphasized" tooltip="Joule" press="onJoule">
 					<layoutData>
 						<OverflowToolbarLayoutData priority="NeverOverflow"/>
 					</layoutData>
@@ -142,83 +116,41 @@
 			<NavContainer id="pageContainer" initialPage="page1">
 				<pages>
 					<Page id="page1" showHeader="false" busy="{ui>/busy}" busyIndicatorDelay="0">
-                        <headerContent>
-                            <!-- <Title text="SAGenAICity - AskTheCity Chatbot  🤖" class="sapUiSmallMargin"/> -->
-                            <ToolbarSpacer />
-                        </headerContent>
+                        <headerContent></headerContent>
                         <content>
-							<!-- <mvc:XMLView viewName="chat.view.Page1Welcome" id="Page1Welcome" type="XML"></mvc:XMLView> -->
 							<core:Fragment fragmentName="chat.view.FPage1Welcome" id="FPage1Welcome" type="XML"/>
-							<!-- <IllustratedMessage 
-								enableVerticalResponsiveness="true"
-								title="Good day! Looks like you have completed all tasks! ☑️"
-								description=""
-								illustrationType="sapIllus-BalloonSky">
-								<additionalContent>
-									<Button icon="sap-icon://sys-help" press="onSearchPress" text="Need help with a new advisory?" class="sapUiTinyMargin"/>
-									<Button icon="sap-icon://search" press="onKBPress" text="Search up knowledge base" class="sapUiTinyMargin"/>
-									<Button icon="sap-icon://learning-assistant" press="onClusterExpPress" text="Explore the cluster analysis of advisories" class="sapUiTinyMargin"/>
-									<Button icon="sap-icon://learning-assistant" press="onCatMgmtPress" text="Manage categories with ease" class="sapUiTinyMargin"/>
-									<Button visible="false" icon="sap-icon://da" press="onJoule" text="Talk to Joule for Insights" class="sapUiTinyMargin"/>
-								</additionalContent>
-							</IllustratedMessage> -->
                         </content>
-                        <footer>
-                            <OverflowToolbar height="auto" width="100%">
-                                <ToolbarSpacer />
-
-                                <ToolbarSpacer />
-                            </OverflowToolbar>
-                        </footer>
+                        <footer></footer>
                     </Page>
 					<Page id="page2" floatingFooter="false" busy="{ui>/busy}" busyIndicatorDelay="0">
-						<!-- <IllustratedMessage
-							id="im"
-							illustrationSize="Auto"
-							illustrationType="sapIllus-SearchEarth">
-							<additionalContent>
-								<Button text="Action (optional)" />
-							</additionalContent>
-						</IllustratedMessage> -->
                         <headerContent>
                             <Title text="Advisory Buddy Search Tool" class="sapUiSmallMargin"/>
                             <ToolbarSpacer />
-                            <!-- <Button icon="sap-icon://delete" tooltip="{i18n>delete}" press=".onDeleteChat" binding="{/deleteChatSession(...)}" /> -->
+							<ToolbarSpacer />
                         </headerContent>
                         <content>
 							<core:Fragment fragmentName="chat.view.FPage2AdvisoryBuddy" id="FPage2AdvisoryBuddy" type="XML"/>
                         </content>
-                        <footer>
-                            <!-- <OverflowToolbar height="auto" width="100%">
-                                <ToolbarSpacer />
-                                <FeedInput
-                                    showIcon="true"
-                                    icon="https://styles.redditmedia.com/t5_ahn97m/styles/communityIcon_wnj87tgxiqec1.jpg"
-                                    placeholder="Type a message...."
-                                    growing="false"
-                                    rows="3"
-                                    post=".onSendMessage"
-                                    enabled="{ui>/enabled}"
-                                    class="sapUiSmallMarginTopBottom"
-                                    binding="{/getAiResponse(...)}" />
-                                <ToolbarSpacer />
-                            </OverflowToolbar> -->
-                        </footer>
+                        <footer></footer>
                     </Page>
 					<Page id="page3" floatingFooter="false" busy="{ui>/busy}" busyIndicatorDelay="0">
-						<!-- <IllustratedMessage
-							id="im"
-							illustrationSize="Auto"
-							illustrationType="sapIllus-SearchEarth">
-							<additionalContent>
-								<Button text="Action (optional)" />
-							</additionalContent>
-						</IllustratedMessage> -->
                         <headerContent>
-                            <Title text="Manager's Cockpit" class="sapUiSmallMargin"/>
+                            <Title text="Knowledge Base" class="sapUiSmallMargin"/>
+							<ToolbarSpacer />
+							<Label text="Filter by:" labelFor="state"/>
+							<!-- <SearchField liveChange=".onKBSearch" width="55%"/> -->
+							<SearchField id="state" placeholder="Enter project/request ID..." change=".onKBSearch" width="55%"/>
+                        </headerContent>
+                        <content>
+							<core:Fragment fragmentName="chat.view.FPage3KnowledgeBase" id="FPage3KnowledgeBase" type="XML"/>
+                        </content>
+                        <footer>
+                        </footer>
+                    </Page>
+					<Page id="page4" floatingFooter="false" busy="{ui>/busy}" busyIndicatorDelay="0">
+                        <headerContent>
+                            <Title text="Cluster Exploration" class="sapUiSmallMargin"/>
                             <ToolbarSpacer />
-                            <!-- <Button icon="sap-icon://delete" tooltip="{i18n>delete}" press=".onDeleteChat" binding="{/deleteChatSession(...)}" />
-                            <Button icon="sap-icon://save" tooltip="{i18n>delete}" press=".onTest" /> -->
 							<Label text="Auto Refresh:"/>
 							<Switch change="onClusterExpAutoRefresh" state="false">
 								<layoutData>
@@ -227,249 +159,28 @@
 							</Switch>
                         </headerContent>
                         <content>
-						<!-- <MessageStrip
-							visible="false"
-							text="Below are some insights to your advisory journey! Your last adjustment to your team's learning plan was on Dec 2024."
-							showIcon="true"
-							customIcon="sap-icon://ai"
-							showCloseButton="true"
-							class="sapUiTinyMargin">
-						</MessageStrip>
-							<f:Card id="scatterCard" width="95%" height="800px" class="sapUiTinyMarginBegin sapUiTinyMarginTop sapUiTinyMarginEnd">
-								<f:header>
-									<card:Header title="Cluster Analysis of Trending Cluster Categories" subtitle="Grouping &amp; Comparing Advisories Requests by Cluster" />
-								</f:header>
-								<f:content>
-									<html:iframe id="chart" src="cluster_category_analysis.html" style="-webkit-transform: scale(1); transform: scale(1); -webkit-transform-origin: 0 0; transform-origin: 0 0;" frameBorder="0" height="900px" width="100%" scrolling="yes"/>
-								</f:content>
-							</f:Card>
-
-							<f:GridContainer id="demoGrid" class="sapUiTinyMargin">
-
-								<f:Card id="clusterBarCard" height="800px" width="100%" class="sapUiTinyMarginBegin sapUiTinyMarginTop sapUiTinyMarginEnd">
-									<f:layoutData>
-										<f:GridContainerItemLayoutData columns="10" />
-									</f:layoutData>
-									<f:header>
-										<card:Header title="Project Distribution by Cluster" subtitle="Breakdown of Projects by Architect" />
-									</f:header>
-									<f:content>
-										<html:iframe id="clusterExpertChart" src="cluster_project_by_expert.html" style="-webkit-transform: scale(1); transform: scale(1); -webkit-transform-origin: 0 0; transform-origin: 0 0;" frameBorder="0" height="900px" width="100%" scrolling="yes"/>
-									</f:content>
-								</f:Card>
-
-								<f:Card id="pieCard" height="600px" width="100%" class="sapUiTinyMarginBegin sapUiTinyMarginTop sapUiTinyMarginEnd">
-									<f:layoutData>
-										<f:GridContainerItemLayoutData columns="6" />
-									</f:layoutData>
-									<f:header>
-										<card:Header title="Project Breakdown by Category" subtitle="Number of Projects in Each Category" />
-									</f:header>
-									<f:content>
-										<suite:ChartContainer
-											id="piechartContainer"
-											showLegend="false"
-											showFullScreen="true"
-											showPersonalization="false"
-											autoAdjustHeight="false"
-											personalizationPress="attachPersonalizationPress"
-											contentChange="attachContentChange"
-											title="">
-											<suite:content>
-												<suite:ChartContainerContent
-													icon="sap-icon://line-chart"
-													title="Line Chart">
-													<suite:content>
-														<viz:VizFrame id="piechartContainerVizFrame" height="500px" width="100%"
-															uiConfig="{applicationSet:'fiori'}">
-															<viz:dependents>
-																<viz:Popover id="idPopOverPie"></viz:Popover>
-															</viz:dependents>
-														</viz:VizFrame>
-													</suite:content>
-												</suite:ChartContainerContent>
-											</suite:content>
-											<suite:toolbar>
-												<OverflowToolbar id="appToolbar">
-													<Label id="pieRefreshLabel" text=""/>
-													<ToolbarSpacer/>
-													<suite:ChartContainerToolbarPlaceholder></suite:ChartContainerToolbarPlaceholder>
-												</OverflowToolbar>
-											</suite:toolbar>
-										</suite:ChartContainer>
-									</f:content>
-								</f:Card>
-
-
-								<f:Card id="columnCard" height="600px" width="100%" class="sapUiTinyMarginBegin sapUiTinyMarginTop sapUiTinyMarginEnd">
-									<f:layoutData>
-										<f:GridContainerItemLayoutData columns="6" />
-									</f:layoutData>
-									<f:header>
-										<card:Header title="Project Workload by Expert and Category" subtitle="Number of Projects Handled by Each Expert, Categorized by Project Type" />
-									</f:header>
-									<f:content>
-										<suite:ChartContainer
-											id="chartContainer"
-											showLegend="false"
-											showFullScreen="true"
-											showPersonalization="false"
-											autoAdjustHeight="false"
-											personalizationPress="attachPersonalizationPress"
-											contentChange="attachContentChange"
-											title="">
-											<suite:dimensionSelectors>
-												<Select id="idoSelect1" change="onColChartHandleSelectionChange" 
-												valueState="Information" valueStateText="Chart results will be filtered by the selected expert.">
-													<core:Item key="Archie" text="Projects by Archie"/>
-													<core:Item key="Chris" text="Projects by Chris"/>
-													<core:Item key="Emma" text="Projects by Emma"/>
-													<core:Item key="Jules" text="Projects by Jules"/>
-													<core:Item key="Leonard" text="Projects by Leonard"/>
-													<core:Item key="Mary" text="Projects by Mary"/>
-													<core:Item key="Sandra" text="Projects by Sandra"/>
-												</Select>
-											</suite:dimensionSelectors>
-											<suite:content>
-												<suite:ChartContainerContent
-													icon="sap-icon://line-chart"
-													title="Line Chart">
-													<suite:content>
-														<viz:VizFrame id="chartContainerVizFrame" height="500px" width=""
-															uiConfig="{applicationSet:'fiori'}">
-															<viz:dependents>
-																<viz:Popover id="idPopOverCol"></viz:Popover>
-															</viz:dependents>
-														</viz:VizFrame>
-													</suite:content>
-												</suite:ChartContainerContent>
-											</suite:content>
-											<suite:toolbar>
-												<OverflowToolbar>
-													<ToolbarSpacer/>
-													<Label id="colRefreshLabel" text=""/>
-													<suite:ChartContainerToolbarPlaceholder></suite:ChartContainerToolbarPlaceholder>
-												</OverflowToolbar>
-											</suite:toolbar>
-										</suite:ChartContainer>
-									</f:content>
-								</f:Card>
-
-								<f:Card id="categoryManagementCard" height="800px" width="100%" class="sapUiTinyMarginBegin sapUiTinyMarginTop sapUiTinyMarginEnd">
-									<f:layoutData>
-										<f:GridContainerItemLayoutData columns="10" />
-									</f:layoutData>
-									<f:header>
-										<card:Header title="Cluster Category Management" subtitle="Update Category Labels &amp; Cluster Descriptions" />
-									</f:header>
-									<f:content>
-									<Table id="editableTable" items="{categorymgmt>/clusters}">
-										<headerToolbar>
-											<OverflowToolbar id="otbSubheader">
-												<Title text="" level="H2" />
-												<ToolbarSpacer />
-												<Button text="Edit" press="onCatMgmtEdit" visible="{= ${categorymgmt>/isEditMode} === false }" />
-												<Button text="Cancel" press="onCatMgmtCancel" visible="{= ${categorymgmt>/isEditMode} === true }" />
-												<Button text="Save" press="onCatMgmtSave" visible="{= ${categorymgmt>/isEditMode} === true }" />
-											</OverflowToolbar>
-										</headerToolbar>
-										<columns>
-											<Column width="3em"><Text text="ID" /></Column>
-											<Column width="20em"><Text text="Cluster Description" /></Column>
-											<Column width="12em"><Text text="Category Label" /></Column>
-										</columns>
-										<items>
-											<ColumnListItem>
-												<cells>
-													<Text text="{categorymgmt>cluster_id}" />
-													<Input width="" value="{categorymgmt>cluster_description}" editable="{= ${categorymgmt>/isEditMode} === true }" visible="true"/>
-													<Input value="{categorymgmt>category_label}" editable="{= ${categorymgmt>/isEditMode} === true }" visible="true" />
-													
-
-												</cells>
-											</ColumnListItem>
-										</items>
-									</Table>
-
-									</f:content>
-								</f:Card>
-
-
-							</f:GridContainer>
-
-							<f:Card visible="false" width="95%" class="sapUiTinyMarginBegin sapUiTinyMarginTop sapUiTinyMarginEnd">
-								<f:header>
-									<card:Header title="Learning Plan Assignment" subtitle="Based on Trending Cluster Topics" />
-								</f:header>
-								<f:content>
-									<VBox>
-									<Select
-										class="sapUiSmallMargin"
-										enabled="true"
-										editable="true"
-										forceSelection="false"
-										selectedKey=""
-										items="">
-										<core:Item key="01" text="Archie" />
-										<core:Item key="02" text="Jules" />
-										<core:Item key="03" text="Leonard" />
-									</Select>
-										<MessageStrip
-											text="Drag &amp; drop cluster topics to your learning plan!"
-											showIcon="true"
-											customIcon="sap-icon://ai"
-											showCloseButton="true"
-											class="sapUiTinyMargin">
-										</MessageStrip>
-										<HBox renderType="Bare">
-										
-											
-											<VBox>
-											<Title class="sapUiSmallMargin" text="New Cluster Topics"/>
-											<List
-												id="list1"
-												class="sapUiSmallMargin"
-												width="100%"
-												items="{ path: 'grid>/' }">
-												<StandardListItem title="{grid>title}" />
-											</List>
-											</VBox>
-											<VBox width="100%">
-												<Title class="sapUiSmallMargin" text="Team's Learning Plan"/>
-											<f:GridContainer
-												id="grid1"
-												class="sapUiSmallMargin"
-												width="100%"
-												snapToRow="true"
-												items="{ path: 'grid>/' }">
-												<f:layout>
-													<f:GridContainerSettings rowSize="84px" columnSize="84px" gap="8px" />
-												</f:layout>
-												<f:layoutXS>
-													<f:GridContainerSettings rowSize="70px" columnSize="70px" gap="8px" />
-												</f:layoutXS>
-
-												<f:Card>
-													<f:layoutData>
-														<f:GridContainerItemLayoutData minRows="{grid>rows}" columns="{grid>columns}" />
-													</f:layoutData>
-													<f:header>
-														<card:Header title="{grid>title}" />
-													</f:header>
-												</f:Card>
-											</f:GridContainer>
-											</VBox>
-										</HBox>
-									</VBox>
-								</f:content>
-							</f:Card> -->
-
-								
+							<core:Fragment fragmentName="chat.view.FPage4ClusterExp" id="FPage4ClusterExp" type="XML"/>
                         </content>
                         <footer>
                         </footer>
                     </Page>
-					<Page id="page4" floatingFooter="false" busy="{ui>/busy}" busyIndicatorDelay="0">
+					<Page id="page5" floatingFooter="false" busy="{ui>/busy}" busyIndicatorDelay="0">
+                        <headerContent>
+                            <Title text="Category Management" class="sapUiSmallMargin"/>
+                            <ToolbarSpacer />
+							<Label text="Auto Refresh:"/>
+							<Switch change="onCatMgmtAutoRefresh" state="false">
+								<layoutData>
+									<FlexItemData growFactor="1" />
+								</layoutData>
+							</Switch>
+                        </headerContent>
+                        <content>
+							<core:Fragment fragmentName="chat.view.FPage5CategoryMgmt" id="FPage5CategoryMgmt" type="XML"/>
+                        </content>
+                        <footer></footer>
+                    </Page>
+					<!-- <Page id="page99" floatingFooter="false" busy="{ui>/busy}" busyIndicatorDelay="0">
                         <headerContent>
                             <Title text="SAGenAICity - AskTheCity Chatbot  🤖" class="sapUiSmallMargin"/>
                             <ToolbarSpacer />
@@ -519,65 +230,7 @@
                                 <ToolbarSpacer />
                             </OverflowToolbar>
                         </footer>
-                    </Page>
-					<Page id="page6" floatingFooter="false" busy="{ui>/busy}" busyIndicatorDelay="0">
-                        <headerContent>
-                            <Title text="Knowledge Base" class="sapUiSmallMargin"/>
-							<ToolbarSpacer />
-							<Label text="Filter by:" labelFor="state"/>
-							<!-- <SearchField liveChange=".onKBSearch" width="55%"/> -->
-							<SearchField id="state" placeholder="Enter project/request ID..." change=".onKBSearch" width="55%"/>
-                        </headerContent>
-                        <content>
-							<core:Fragment fragmentName="chat.view.FPage3KnowledgeBase" id="FPage3KnowledgeBase" type="XML"/>
-                        </content>
-                        <footer>
-                        </footer>
-                    </Page>
-					<Page id="page7" floatingFooter="false" busy="{ui>/busy}" busyIndicatorDelay="0">
-                        <headerContent>
-                            <Title text="Cluster Exploration" class="sapUiSmallMargin"/>
-                            <ToolbarSpacer />
-							<Label text="Auto Refresh:"/>
-							<Switch change="onClusterExpAutoRefresh" state="false">
-								<layoutData>
-									<FlexItemData growFactor="1" />
-								</layoutData>
-							</Switch>
-                        </headerContent>
-                        <content>
-							<core:Fragment fragmentName="chat.view.FPage4ClusterExp" id="FPage4ClusterExp" type="XML"/>
-                        </content>
-                        <footer>
-                        </footer>
-                    </Page>
-					<Page id="page8" floatingFooter="false" busy="{ui>/busy}" busyIndicatorDelay="0">
-						<!-- <IllustratedMessage
-							id="im"
-							illustrationSize="Auto"
-							illustrationType="sapIllus-SearchEarth">
-							<additionalContent>
-								<Button text="Action (optional)" />
-							</additionalContent>
-						</IllustratedMessage> -->
-                        <headerContent>
-                            <Title text="Category Management" class="sapUiSmallMargin"/>
-                            <ToolbarSpacer />
-                            <!-- <Button icon="sap-icon://delete" tooltip="{i18n>delete}" press=".onDeleteChat" binding="{/deleteChatSession(...)}" />
-                            <Button icon="sap-icon://save" tooltip="{i18n>delete}" press=".onTest" /> -->
-							<Label text="Auto Refresh:"/>
-							<Switch change="onCatMgmtAutoRefresh" state="false">
-								<layoutData>
-									<FlexItemData growFactor="1" />
-								</layoutData>
-							</Switch>
-                        </headerContent>
-                        <content>
-							<core:Fragment fragmentName="chat.view.FPage5CategoryMgmt" id="FPage5CategoryMgmt" type="XML"/>
-                        </content>
-                        <footer>
-                        </footer>
-                    </Page>
+                    </Page> -->
 				</pages>
 			</NavContainer>
 		</tnt:mainContents>

@@ -16,7 +16,7 @@
 		{
 			"title": "Knowledge Base",
 			"icon": "sap-icon://activity-items",
-			"key": "page6",
+			"key": "page3",
 			"visible": true
 		},
 		{
@@ -28,11 +28,11 @@
 			"items": [
 				{
 					"title": "Cluster Exploration",
-					"key": "page7"
+					"key": "page4"
 				},
 				{
 					"title": "Category Management",
-					"key": "page8"
+					"key": "page5"
 				}
 			]
 		}

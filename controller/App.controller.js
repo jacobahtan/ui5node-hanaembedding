@@ -28,18 +28,18 @@ sap.ui.define(
      * - Basically the endpoints are fetched then store in the UI model of endpoint.
      * - Then we parse it to each GLOBAL variables to be consumed.
      */
-    var ALL_PROJECTS_EP, PROJECT_DETAILS_EP, HANA_EMB_SEARCH_EP, ALL_PROJECTS_BY_EXPERT_EP, ALL_PROJECTS_CATEGORIES_EP, ALL_CLUSTERS_EP;
+    var ALL_PROJECTS_EP, PROJECT_DETAILS_EP, HANA_EMB_SEARCH_EP, ALL_PROJECTS_BY_EXPERT_EP, ALL_PROJECTS_CATEGORIES_EP, ALL_CATEGORIES_EP, UPDATE_CATEGORIES_EP, ALL_CLUSTERS_EP;
 
     const oConfigModel = sap.ui.getCore().getModel("endpoint");
     if (oConfigModel) {
       const pyEndpoint = oConfigModel.getProperty("/pyEndpoint");
-      // console.log("in controller");
-      // console.log(pyEndpoint);
       ALL_PROJECTS_EP = pyEndpoint + "/get_all_projects";
       PROJECT_DETAILS_EP = pyEndpoint + "/get_project_details";
       HANA_EMB_SEARCH_EP = pyEndpoint + "/compare_text_to_existing";
       ALL_PROJECTS_BY_EXPERT_EP = pyEndpoint + "/get_advisories_by_expert_and_category";
       ALL_PROJECTS_CATEGORIES_EP = pyEndpoint + "/get_all_project_categories";
+      ALL_CATEGORIES_EP = pyEndpoint + "/get_categories";
+      UPDATE_CATEGORIES_EP = pyEndpoint + "/update_categories_and_projects";
     }
 
     /** URL ENDPOINTS FOR ADVISORY USE CASE NAVIGATION */
@@ -149,59 +149,9 @@ sap.ui.define(
       return transformedData;
     }
 
-    // async function getClusterData() {
-    //   try {
-    //     const responses = await Promise.all([
-    //       fetch('https://indb-embedding.cfapps.eu12.hana.ondemand.com/get_clusters'),
-    //       fetch('https://indb-embedding.cfapps.eu12.hana.ondemand.com/get_clusters_description'),
-    //       fetch('https://indb-embedding.cfapps.eu12.hana.ondemand.com/get_all_project_categories')
-    //     ]);
-
-    //     const [clustersResponse, descriptionsResponse, categoriesResponse] = await Promise.all(responses.map(res => res.json()));
-
-    //     // Create a map for cluster descriptions for quick lookup
-    //     const descriptionMap = descriptionsResponse.reduce((acc, desc) => {
-    //       acc[desc.CLUSTER_ID] = desc.CLUSTER_DESCRIPTION.trim(); // Trim whitespace
-    //       return acc;
-    //     }, {});
-
-    //     // Create a map for project categories
-    //     const categoryMap = categoriesResponse.project_categories.reduce((acc, cat) => {
-    //       acc[cat.PROJECT_ID] = cat.category_label;
-    //       return acc;
-    //     }, {});
-
-
-    //     const uniqueClusters = {};
-
-    //     clustersResponse.forEach(cluster => {
-    //       const cluster_id = cluster.CLUSTER_ID;
-    //       const project_number = cluster.PROJECT_NUMBER;
-    //       const category_label = categoryMap[project_number];
-    //       const cluster_description = descriptionMap[cluster_id];
-
-    //       if (cluster_description && category_label) { // Ensure both description and category exist.
-    //         if (!uniqueClusters[cluster_id]) {
-    //           uniqueClusters[cluster_id] = {
-    //             cluster_id: cluster_id,
-    //             cluster_description: cluster_description,
-    //             category_label: category_label
-    //           }
-    //         }
-    //       }
-    //     });
-
-    //     return Object.values(uniqueClusters); // Return the unique records as an array
-
-    //   } catch (error) {
-    //     console.error("Error fetching data:", error);
-    //     return []; // Return an empty array in case of error
-    //   }
-    // }
-
     async function getClusterData() {
       try {
-        const categoriesResponse = await fetch('https://indb-embedding.cfapps.eu12.hana.ondemand.com/get_categories');
+        const categoriesResponse = await fetch(ALL_CATEGORIES_EP);
         const categories = await categoriesResponse.json();
 
         const clusterData = categories.map(category => ({
@@ -219,6 +169,30 @@ sap.ui.define(
     }
 
     return BaseController.extend("chat.controller.App", {
+      dKeyPressCount: 0,
+      handleKeyDown: function (event) {
+        if (event.key.toLowerCase() === 'd') { // Case-insensitive check
+          this.dKeyPressCount++;
+
+          if (this.dKeyPressCount === 5) {
+            // Trigger your action here
+            console.log("D key pressed 5 times!");
+            // alert("You pressed 'd' 5 times!");
+            // this.myCustomFunction(); // Call a controller function
+            let isVisible = sap.ui.getCore().byId("container-chat---App--jouleBtn").getVisible();
+            sap.ui.getCore().byId("container-chat---App--jouleBtn").setVisible(!isVisible);
+            let isWelcomeVisible = sap.ui.getCore().byId("container-chat---App--FPage1Welcome--jouleWelcomeBtn").getVisible();
+            sap.ui.getCore().byId("container-chat---App--FPage1Welcome--jouleWelcomeBtn").setVisible(!isWelcomeVisible);
+
+            this.dKeyPressCount = 0; // Reset counter (optional)
+
+            MessageToast.show("💎 Joule (un)locked! 🤫");
+          }
+        } else {
+          // Reset if you want 5 'd's in a row
+          // this.dKeyPressCount = 0;
+        }
+      },
       onJoule: function () {
         if (document.getElementById("cai-webclient-main").style.display == "block") {
           document.getElementById("cai-webclient-main").style.display = "none";
@@ -235,7 +209,7 @@ sap.ui.define(
 
         var oModel = this.getView().getModel("search");
         var gridlistitemcontextdata = oModel.getProperty(oEvent.getSource().oBindingContexts.search.sPath);
-        console.log(gridlistitemcontextdata);
+        // console.log(gridlistitemcontextdata);
         var projID = gridlistitemcontextdata.project_number;
 
         const getprojdeturl = PROJECT_DETAILS_EP + '?project_number=' + projID;
@@ -320,14 +294,14 @@ sap.ui.define(
       onCoinStar: function (oEvent) {
         var oModel = this.getView().getModel("search");
         var gridlistitemcontextdata = oModel.getProperty(oEvent.getSource().getParent().oPropagatedProperties.oBindingContexts.search.sPath);
-        console.log(gridlistitemcontextdata);
+        // console.log(gridlistitemcontextdata);
         MessageToast.show("Opening Coinstar of Project #" + gridlistitemcontextdata.project_number);
         window.open(COINSTAR_URL, "_blank");
       },
       onAddFav: function (oEvent) {
         var oModel = this.getView().getModel("search");
         var gridlistitemcontextdata = oModel.getProperty(oEvent.getSource().getParent().oPropagatedProperties.oBindingContexts.search.sPath);
-        console.log(gridlistitemcontextdata);
+        // console.log(gridlistitemcontextdata);
         MessageToast.show("Added to favourites of Project #" + gridlistitemcontextdata.project_number);
       },
       onCopy: function (oEvent) {
@@ -747,12 +721,12 @@ sap.ui.define(
           payload[item.category_label] = item.category_descr;
         });
 
-        console.log(payload);
+        // console.log(payload);
 
         // MessageToast.show("Uh-oh, seems like there's some issue with the API call to update.");
 
         // Send the transformed data to the server via POST request
-        fetch("https://indb-embedding.cfapps.eu12.hana.ondemand.com/update_categories_and_projects", {
+        fetch(UPDATE_CATEGORIES_EP, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -852,7 +826,7 @@ sap.ui.define(
 
       },
 
-      onInit: async function () {
+      onInit: function () {
         /** [TODO] Learning Plan Assignment */
         // this.initMockDataForLearningPlanAssignmentDragDrop();
         // this.attachDragAndDrop();
@@ -892,22 +866,20 @@ sap.ui.define(
         // var oVizFrame = this.getView().byId(this.createId("FPage5CategoryMgmt--" + this._constants.vizFrame));
         // var oVizFrame = this.getView().byId(this._constants.vizFrame.id);
         var oVizFrame = sap.ui.getCore().byId("container-chat---App--FPage5CategoryMgmt--chartContainerVizFrame");
-        console.log(oVizFrame);
         this._updateVizFrame(oVizFrame);
 
         // var oPieVizFrame = this.getView().byId(this.createId("FPage5CategoryMgmt--" + this._pieconstants.vizFrame));
         var oPieVizFrame = sap.ui.getCore().byId("container-chat---App--FPage5CategoryMgmt--piechartContainerVizFrame");
         this._updatePieVizFrame(oPieVizFrame);
 
-        this.oRouter = this.getOwnerComponent().getRouter();
-        this.oRouter.attachRouteMatched(this.onRouteMatched, this);
-        this.oRouter.attachBeforeRouteMatched(this.onBeforeRouteMatched, this);
+        // this.oRouter = this.getOwnerComponent().getRouter();
+        // this.oRouter.attachRouteMatched(this.onRouteMatched, this);
+        // this.oRouter.attachBeforeRouteMatched(this.onBeforeRouteMatched, this);
+        document.addEventListener('keydown', this.handleKeyDown.bind(this)); // Bind 'this'
       },
 
       _updateVizFrame: async function (vizFrame) {
         var oVizFrame = this._constants.vizFrame;
-        console.log("in _updateVizFrame")
-        console.log(oVizFrame)
         const url = ALL_PROJECTS_BY_EXPERT_EP + '?expert=Jules';
         const options = { method: 'GET' };
 
@@ -915,7 +887,6 @@ sap.ui.define(
           const response = await fetch(url, options);
           const data = await response.json();
           var oModel = new JSONModel(data);
-          console.log(oVizFrame.dataset);
           var oDataset = new FlattenedDataset(oVizFrame.dataset);
 
           vizFrame.setVizProperties(oVizFrame.properties);
@@ -978,7 +949,7 @@ sap.ui.define(
                   var values = data.data.val;
                   var divStr = "";
                   var idx = values[1].value;
-                  console.log(values);
+                  // console.log(values);
 
                   // console.log("idx:", idx, "exData.length:", exData.length); // Debugging
 
@@ -1027,7 +998,7 @@ sap.ui.define(
                   var values = data.data.val;
                   var divStr = "";
                   var idx = values[1].value;
-                  console.log(values);
+                  // console.log(values);
 
                   // console.log("idx:", idx, "exData.length:", exData.length); // Debugging
 
@@ -1049,8 +1020,8 @@ sap.ui.define(
 
 
                 } else {
-                  console.error("data.data.val is undefined or null"); // Handle missing data
-                  return new HTMLControl({ content: "Data not available" }); // Or return ""
+                  console.error("data.data.val is undefined or null");
+                  return new HTMLControl({ content: "Data not available" });
                 }
               }
             }
@@ -1058,46 +1029,28 @@ sap.ui.define(
         }
       },
 
-      onAfterRendering: async function () {
+      onAfterRendering: function () {
         //  Parent-Child views rendering
         // this._setToggleButtonTooltip(!Device.system.desktop);
         Device.media.attachHandler(this._handleMediaChange, this);
         this._handleMediaChange();
         this.getView().byId("sideNavigation").setSelectedKey("page1");
 
-        const options = { method: 'GET' };
+        fetch(ALL_PROJECTS_EP, { method: 'GET' }) // No 'await' here
+          .then(response => response.json())
+          .then(data => {
+            var oProjects = new JSONModel(data);
+            this.getView().setModel(oProjects, "projects");
+            var oSettingsModel = new JSONModel({ navigatedItem: "" });
+            this.getView().setModel(oSettingsModel, 'settings');
 
-        try {
-          const response = await fetch(ALL_PROJECTS_EP, options);
-          const data = await response.json();
+            // ... your DOM manipulation code (but see note below about timing)
+          })
+          .catch(error => {
+            console.error("In onAfterRendering:");
+            console.error(error);
+          });
 
-          var oProjects = new JSONModel(data);
-          this.getView().setModel(oProjects, "projects");
-          var oSettingsModel = new JSONModel({ navigatedItem: "" });
-          this.getView().setModel(oSettingsModel, 'settings');
-
-          // console.log(data);
-
-          /**
-           * [TODO]
-           * Method to access DOM of the control to remove No Wrap style of the text control
-           * Issue: DOM is not loaded yet.
-           */
-          // const oListItem = sap.ui.getCore().byId("container-chat---App--idList");
-          // const aItems = oListItem.getItems(); // Get an array of items
-          // aItems.forEach(function (oItem) { // Use forEach
-          //   const oObjectAttribute = oItem.getAggregation("attributes")[0];
-          //   console.log(oObjectAttribute);
-
-          //   const oText = oObjectAttribute.getAggregation("_textControl");
-          //   console.log(oText);
-          //   console.log(oText.getDomRef());
-          //   oText.getDomRef().classList.remove("sapMTextNoWrap");
-          // });
-        } catch (error) {
-          console.error("In onAfterRendering:");
-          console.error(error);
-        }
 
         /** Methods to connect click popover on charts */
         var catVizFrame = sap.ui.getCore().byId("container-chat---App--FPage5CategoryMgmt--piechartContainerVizFrame");
@@ -1119,16 +1072,16 @@ sap.ui.define(
         this.byId("sideNavigation").setSelectedKey("page2");
       },
       onKBPress: function (oEvent) {
-        this.byId("pageContainer").to(this.getView().createId("page6"));
-        this.byId("sideNavigation").setSelectedKey("page6");
+        this.byId("pageContainer").to(this.getView().createId("page3"));
+        this.byId("sideNavigation").setSelectedKey("page3");
       },
       onClusterExpPress: function (oEvent) {
-        this.byId("pageContainer").to(this.getView().createId("page7"));
-        this.byId("sideNavigation").setSelectedKey("page7");
+        this.byId("pageContainer").to(this.getView().createId("page4"));
+        this.byId("sideNavigation").setSelectedKey("page4");
       },
       onCatMgmtPress: function (oEvent) {
-        this.byId("pageContainer").to(this.getView().createId("page8"));
-        this.byId("sideNavigation").setSelectedKey("page8");
+        this.byId("pageContainer").to(this.getView().createId("page5"));
+        this.byId("sideNavigation").setSelectedKey("page5");
       },
 
       onNavItemSelect: function (oEvent) {
@@ -1222,13 +1175,13 @@ sap.ui.define(
             this.byId("spacer").setVisible(false);
             this.byId("productName").setVisible(true);
             // this.byId("productName").setTitleStyle("{ fontSize: '0.2em'}");
-            console.log(this.byId("productName").getTitleStyle());
+            // console.log(this.byId("productName").getTitleStyle());
             // this.byId("productName").setStyle("fontSize", "20px");
             this.byId("productName").setTitleStyle("H6");
             this.byId("secondTitle").setVisible(false);
             this.byId("profile").setVisible(false);
             // MessageToast.show("Screen width is corresponding to Phone");
-            console.log(document.getElementById("container-chat---App--demoGrid-item-container-chat---App--pieCard"));
+            // console.log(document.getElementById("container-chat---App--demoGrid-item-container-chat---App--pieCard"));
             // document.getElementById("container-chat---App--demoGrid-item-container-chat---App--pieCard").style.gridArea="span 7 / span 5";
             this.byId("scatterCard").setHeight("600px");
             break;
@@ -1239,6 +1192,7 @@ sap.ui.define(
 
       onExit: function () {
         Device.media.detachHandler(this._handleMediaChange, this);
+        document.removeEventListener('keydown', this.handleKeyDown.bind(this));
       },
 
       onDeleteChat: async function (evt) {

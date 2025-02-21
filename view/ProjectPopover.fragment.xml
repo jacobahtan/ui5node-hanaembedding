@@ -18,6 +18,5 @@
 					press=".handleEmailPress" />
 			</OverflowToolbar>
 		</footer>
-		<!-- <Image src="{ProductPicUrl}" width="15em" densityAware="false" /> -->
 	</Popover>
 </core:FragmentDefinition>

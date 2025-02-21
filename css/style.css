@@ -31,3 +31,9 @@
   .sapTntToolHeader .sapMTitle {
     font-size: 0.5rem;
 }
+
+/* In your CSS file */
+.toolbarTitle {
+  flex-grow: 1; /* Allow the title to take up available space */
+  text-align: center; /* Center the text within the title */
+}

@@ -20,7 +20,7 @@
             <Button icon="sap-icon://search" press="onKBPress" text="Search up knowledge base" class="sapUiTinyMargin"/>
             <Button icon="sap-icon://learning-assistant" press="onClusterExpPress" text="Explore the cluster analysis of advisories" class="sapUiTinyMargin"/>
             <Button icon="sap-icon://learning-assistant" press="onCatMgmtPress" text="Manage categories with ease" class="sapUiTinyMargin"/>
-            <Button visible="false" icon="sap-icon://da" press="onJoule" text="Talk to Joule for Insights" class="sapUiTinyMargin"/>
+            <Button id="jouleWelcomeBtn" visible="false" icon="sap-icon://da" press="onJoule" text="Talk to Joule for Insights" class="sapUiTinyMargin"/>
         </additionalContent>
     </IllustratedMessage>
 </core:FragmentDefinition>

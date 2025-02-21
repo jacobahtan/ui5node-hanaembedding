@@ -54,7 +54,6 @@
                         <OverflowToolbar id="appToolbar">
                             <Label id="pieRefreshLabel" text=""/>
                             <ToolbarSpacer/>
-                            <!-- <Button id="btnAction2" text="CustomAction" type="Transparent" press="onCustomActionPress"></Button> -->
                             <suite:ChartContainerToolbarPlaceholder></suite:ChartContainerToolbarPlaceholder>
                         </OverflowToolbar>
                     </suite:toolbar>
@@ -110,7 +109,6 @@
                         <OverflowToolbar>
                             <ToolbarSpacer/>
                             <Label id="colRefreshLabel" text="" width=""/>
-                            <!-- <Button id="btnAction2" text="CustomAction" type="Transparent" press="onCustomActionPress"></Button> -->
                             <suite:ChartContainerToolbarPlaceholder></suite:ChartContainerToolbarPlaceholder>
                         </OverflowToolbar>
                     </suite:toolbar>
@@ -133,12 +131,6 @@
                     <OverflowToolbar id="otbSubheader">
                         <Label id="catTableRefreshLabel" text=""/>
                         <ToolbarSpacer />
-                        <!-- <Button id="editButton" text="Edit" type="Transparent"
-                            press="onEdit" /> -->
-                        <!-- <Button id="saveButton" text="Save" icon="sap-icon://save" type="Transparent"
-                            press="onSave" visible="true" /> -->
-                        <!-- <Button id="cancelButton" text="Cancel" type="Transparent"
-                            press="onCancel" visible="false" /> -->
                         <Button text="Edit" press="onCatMgmtEdit" visible="{= ${categorymgmt>/isEditMode} === false }" />
                         <Button text="Cancel" press="onCatMgmtCancel" visible="{= ${categorymgmt>/isEditMode} === true }" />
                         <Button text="Save" press="onCatMgmtSave" visible="{= ${categorymgmt>/isEditMode} === true }" />
@@ -167,71 +159,6 @@
                     </ColumnListItem>
                 </items>
             </Table>
-        </f:content>
-    </f:Card>
-
-    <f:Card visible="false" width="95%" class="sapUiTinyMarginBegin sapUiTinyMarginTop sapUiTinyMarginEnd">
-        <f:header>
-            <card:Header title="Learning Plan Assignment" subtitle="Based on Trending Cluster Topics" />
-        </f:header>
-        <f:content>
-            <VBox>
-                <Select
-                    class="sapUiSmallMargin"
-                    enabled="true"
-                    editable="true"
-                    forceSelection="false"
-                    selectedKey=""
-                    items="">
-                    <core:Item key="01" text="Archie" />
-                    <core:Item key="02" text="Jules" />
-                    <core:Item key="03" text="Leonard" />
-                </Select>
-                <MessageStrip
-                    text="Drag &amp; drop cluster topics to your learning plan!"
-                    showIcon="true"
-                    customIcon="sap-icon://ai"
-                    showCloseButton="true"
-                    class="sapUiTinyMargin">
-                </MessageStrip>
-                <HBox renderType="Bare">
-                    <VBox>
-                        <Title class="sapUiSmallMargin" text="New Cluster Topics"/>
-                        <List
-                            id="list1"
-                            class="sapUiSmallMargin"
-                            width="100%"
-                            items="{ path: 'grid>/' }">
-                            <StandardListItem title="{grid>title}" />
-                        </List>
-                    </VBox>
-                    <VBox width="100%">
-                        <Title class="sapUiSmallMargin" text="Team's Learning Plan"/>
-                        <f:GridContainer
-                            id="grid1"
-                            class="sapUiSmallMargin"
-                            width="100%"
-                            snapToRow="true"
-                            items="{ path: 'grid>/' }">
-                            <f:layout>
-                                <f:GridContainerSettings rowSize="84px" columnSize="84px" gap="8px" />
-                            </f:layout>
-                            <f:layoutXS>
-                                <f:GridContainerSettings rowSize="70px" columnSize="70px" gap="8px" />
-                            </f:layoutXS>
-
-                            <f:Card>
-                                <f:layoutData>
-                                    <f:GridContainerItemLayoutData minRows="{grid>rows}" columns="{grid>columns}" />
-                                </f:layoutData>
-                                <f:header>
-                                    <card:Header title="{grid>title}" />
-                                </f:header>
-                            </f:Card>
-                        </f:GridContainer>
-                    </VBox>
-                </HBox>
-            </VBox>
         </f:content>
     </f:Card>
 </core:FragmentDefinition>

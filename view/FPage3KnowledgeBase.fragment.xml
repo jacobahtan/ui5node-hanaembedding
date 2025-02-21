@@ -22,16 +22,6 @@
                 <Label id="idFilterLabel" />
             </OverflowToolbar>
         </infoToolbar>
-        <!-- <StandardListItem
-            title="ID #{projects>project_number}\n{projects>solution}"
-            description="{projects>topic}"
-            icon="sap-icon://accept"
-            iconDensityAware="false"
-            iconInset="false"
-            highlight="Information"
-            info="Information"
-            wrapping="true"
-            wrapCharLimit="100" /> -->
         <ObjectListItem
             title="{projects>topic}"
             type="Active"
