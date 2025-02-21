@@ -38,12 +38,13 @@ sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/json/JSONModel", "sap/f/
         })
         .then(data => {
           const pyEndpoint = data; // Assign the value
-          console.log("Python endpoint:", pyEndpoint);
+          // console.log("Python endpoint:", pyEndpoint);
 
           var oModel = new JSONModel({ pyEndpoint: pyEndpoint });
           sap.ui.getCore().setModel(oModel, "endpoint");
         })
         .catch(error => {
+          console.log("In Component.js > init");
           console.error("Error fetching environment variable:", error);
           // Handle the error appropriately, e.g., display an error message
           // in your UI.

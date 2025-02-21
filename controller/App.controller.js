@@ -290,7 +290,12 @@ sap.ui.define(
         const cleanValue = searchValue.replace(/\r\n|\r|\n/g, '');
 
         var self = this;
-        self.getView().byId("gridList").setHeaderText("Top 5 Similar Requests: " + cleanValue);
+        /** [TO IMPROVE: if change of fragment ID can lead to problems] */
+        // self.getView().byId("FPage2AdvisoryBuddy--gridList").setHeaderText("Top 5 Similar Requests: " + cleanValue);
+
+        /** Improvements: for reusability of fragment */
+        var oGridList1 = this.getView().byId(this.createId("FPage2AdvisoryBuddy--gridList"));
+        oGridList1.setHeaderText("Top 5 Similar Requests: " + cleanValue);
 
         const myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
@@ -506,8 +511,8 @@ sap.ui.define(
           aFilters.push(filter);
         }
 
-        // update list binding
-        var oList = this.byId("idList");
+        // var oList = this.byId("idList");
+        var oList = this.getView().byId(this.createId("FPage3KnowledgeBase--idList"));
         var oBinding = oList.getBinding("items");
         oBinding.filter(aFilters, "Application");
       },
@@ -549,11 +554,12 @@ sap.ui.define(
       },
 
       onColChartHandleSelectionChange: async function (oEvent) {
-        this.getView().byId("columnCard").setBusy(true);
+        this.getView().byId("FPage5CategoryMgmt--columnCard").setBusy(true);
         var oItem = oEvent.getParameter("selectedItem");
         const url = ALL_PROJECTS_BY_EXPERT_EP + '?expert=' + oItem.getKey();
 
-        var vizFrame = this.getView().byId(this._constants.vizFrame.id);
+        // var vizFrame = this.getView().byId(this._constants.vizFrame.id);
+        var vizFrame = sap.ui.getCore().byId("container-chat---App--FPage5CategoryMgmt--chartContainerVizFrame");
 
         const options = { method: 'GET' };
 
@@ -565,11 +571,11 @@ sap.ui.define(
           //  Seems like not required for this vizUpdate() as it requires more dataset.
           //  https://sapui5.hana.ondemand.com/#/api/sap.viz.ui5.controls.VizFrame%23methods/vizUpdate
           // vizFrame.vizUpdate();
-          this.getView().byId("columnCard").setBusy(false);
+          this.getView().byId("FPage5CategoryMgmt--columnCard").setBusy(false);
         } catch (error) {
           console.error("In onColChartHandleSelectionChange:");
           console.error(error);
-          this.getView().byId("columnCard").setBusy(false);
+          this.getView().byId("FPage5CategoryMgmt--columnCard").setBusy(false);
         }
       },
 
@@ -777,7 +783,7 @@ sap.ui.define(
         var oState = oEvent.getParameter("state");
 
         if (oState) {
-          localStorage.setItem("AUTO-REFRESH", "true");
+          // localStorage.setItem("AUTO-REFRESH", "true");
 
           // Store the interval ID so you can clear it later
           if (!this._autoRefreshInterval) { // Check if it's already set
@@ -785,15 +791,16 @@ sap.ui.define(
               const now = new Date();
               const formattedDateTime = now.toLocaleString();
 
-              this.getView().byId("pieRefreshLabel").setText("Last refreshed at " + formattedDateTime);
-              this.getView().byId("colRefreshLabel").setText("Last refreshed at " + formattedDateTime);
-              this.getView().byId("catTableRefreshLabel").setText("Last refreshed at " + formattedDateTime);
-              this.getView().byId("columnCard").setBusy(true);
-              this.getView().byId("pieCard").setBusy(true);
+              this.getView().byId("FPage5CategoryMgmt--pieRefreshLabel").setText("Last refreshed at " + formattedDateTime);
+              this.getView().byId("FPage5CategoryMgmt--colRefreshLabel").setText("Last refreshed at " + formattedDateTime);
+              this.getView().byId("FPage5CategoryMgmt--catTableRefreshLabel").setText("Last refreshed at " + formattedDateTime);
+              this.getView().byId("FPage5CategoryMgmt--columnCard").setBusy(true);
+              this.getView().byId("FPage5CategoryMgmt--pieCard").setBusy(true);
 
-              const selectedExpert = this.getView().byId("idoSelect1").getSelectedKey();
+              const selectedExpert = this.getView().byId("FPage5CategoryMgmt--idoSelect1").getSelectedKey();
               const url = ALL_PROJECTS_BY_EXPERT_EP + '?expert=' + selectedExpert;
-              var vizFrame = this.getView().byId(this._constants.vizFrame.id);
+              // var vizFrame = this.getView().byId(this._constants.vizFrame.id);
+              var vizFrame = sap.ui.getCore().byId("container-chat---App--FPage5CategoryMgmt--chartContainerVizFrame");
 
               try {
                 const options = { method: 'GET' };
@@ -805,22 +812,22 @@ sap.ui.define(
                 var oModel = new JSONModel(data);
                 vizFrame.setModel(oModel);
 
-                this.getView().byId("columnCard").setBusy(false);
-                this.getView().byId("pieCard").setBusy(false);
+                this.getView().byId("FPage5CategoryMgmt--columnCard").setBusy(false);
+                this.getView().byId("FPage5CategoryMgmt--pieCard").setBusy(false);
               } catch (error) {
                 console.error("Error fetching data:", error);
                 // Handle error, maybe stop the interval:
                 clearInterval(this._autoRefreshInterval);
                 this._autoRefreshInterval = null; // Clear the interval ID
                 sap.m.MessageToast.show("Error loading data. Auto-refresh stopped.");
-                this.getView().byId("columnCard").setBusy(false);
-                this.getView().byId("pieCard").setBusy(false);
+                this.getView().byId("FPage5CategoryMgmt--columnCard").setBusy(false);
+                this.getView().byId("FPage5CategoryMgmtpieCard").setBusy(false);
               }
             }, 5000); // 5000 milliseconds = 5 seconds
           }
 
         } else {
-          localStorage.setItem("AUTO-REFRESH", "false");
+          // localStorage.setItem("AUTO-REFRESH", "false");
           if (this._autoRefreshInterval) {
             clearInterval(this._autoRefreshInterval);
             this._autoRefreshInterval = null; // Important: Clear the interval ID
@@ -852,7 +859,7 @@ sap.ui.define(
         getClusterData()
           .then(data => {
             pieCategoryData = data;
-            console.log(JSON.stringify(data, null, 2)); // Nicely formatted output
+            // console.log(JSON.stringify(data, null, 2)); // Nicely formatted output
             // Fetch data from API and bind to the model
             const oModel = new JSONModel();
             oModel.setData({
@@ -872,26 +879,35 @@ sap.ui.define(
 
         var oModel = new JSONModel(sap.ui.require.toUrl("chat/model/data.json"));
         this.getView().setModel(oModel, "nav");
-        this._setToggleButtonTooltip(!Device.system.desktop);
 
-        Device.media.attachHandler(this._handleMediaChange, this);
-        this._handleMediaChange();
+        //  Shifted to onAfterRendering due to parent-child XML views rendering
+        // this._setToggleButtonTooltip(!Device.system.desktop);
+        // Device.media.attachHandler(this._handleMediaChange, this);
+        // this._handleMediaChange();
+        // this.byId("sideNavigation").setSelectedKey("page1");
+
+        // var catVizFrame = sap.ui.getCore().byId("container-chat---App--FPage5CategoryMgmt--piechartContainerVizFrame");
+        // var colVizFrame = sap.ui.getCore().byId("container-chat---App--FPage5CategoryMgmt--chartContainerVizFrame");
+
+        // var oVizFrame = this.getView().byId(this.createId("FPage5CategoryMgmt--" + this._constants.vizFrame));
+        // var oVizFrame = this.getView().byId(this._constants.vizFrame.id);
+        var oVizFrame = sap.ui.getCore().byId("container-chat---App--FPage5CategoryMgmt--chartContainerVizFrame");
+        console.log(oVizFrame);
+        this._updateVizFrame(oVizFrame);
+
+        // var oPieVizFrame = this.getView().byId(this.createId("FPage5CategoryMgmt--" + this._pieconstants.vizFrame));
+        var oPieVizFrame = sap.ui.getCore().byId("container-chat---App--FPage5CategoryMgmt--piechartContainerVizFrame");
+        this._updatePieVizFrame(oPieVizFrame);
 
         this.oRouter = this.getOwnerComponent().getRouter();
         this.oRouter.attachRouteMatched(this.onRouteMatched, this);
         this.oRouter.attachBeforeRouteMatched(this.onBeforeRouteMatched, this);
-
-        this.byId("sideNavigation").setSelectedKey("page1");
-
-        var oVizFrame = this.getView().byId(this._constants.vizFrame.id);
-        this._updateVizFrame(oVizFrame);
-
-        var oPieVizFrame = this.getView().byId(this._pieconstants.vizFrame.id);
-        this._updatePieVizFrame(oPieVizFrame);
       },
 
       _updateVizFrame: async function (vizFrame) {
         var oVizFrame = this._constants.vizFrame;
+        console.log("in _updateVizFrame")
+        console.log(oVizFrame)
         const url = ALL_PROJECTS_BY_EXPERT_EP + '?expert=Jules';
         const options = { method: 'GET' };
 
@@ -899,6 +915,7 @@ sap.ui.define(
           const response = await fetch(url, options);
           const data = await response.json();
           var oModel = new JSONModel(data);
+          console.log(oVizFrame.dataset);
           var oDataset = new FlattenedDataset(oVizFrame.dataset);
 
           vizFrame.setVizProperties(oVizFrame.properties);
@@ -1042,6 +1059,12 @@ sap.ui.define(
       },
 
       onAfterRendering: async function () {
+        //  Parent-Child views rendering
+        // this._setToggleButtonTooltip(!Device.system.desktop);
+        Device.media.attachHandler(this._handleMediaChange, this);
+        this._handleMediaChange();
+        this.getView().byId("sideNavigation").setSelectedKey("page1");
+
         const options = { method: 'GET' };
 
         try {
@@ -1077,16 +1100,16 @@ sap.ui.define(
         }
 
         /** Methods to connect click popover on charts */
-        var catVizFrame = sap.ui.getCore().byId("container-chat---App--piechartContainerVizFrame");
-        var oPopOverPie = sap.ui.getCore().byId("container-chat---App--idPopOverPie");
+        var catVizFrame = sap.ui.getCore().byId("container-chat---App--FPage5CategoryMgmt--piechartContainerVizFrame");
+        var oPopOverPie = sap.ui.getCore().byId("container-chat---App--FPage5CategoryMgmt--idPopOverPie");
         /** [TODO] Improve Popover to include Cluster Desecription */
         // var xxjson = { 'customDataControl': function (data) { if (data.data.val) { var exData = [{ "Owner": "Brooks A. Williams", "Phone": "778-721-2235" }, { "Owner": "Candice C. Bernardi", "Phone": "204-651-2434" }, { "Owner": "Robert A. Cofield", "Phone": "262-684-6815" }, { "Owner": "Melissa S. Maciel", "Phone": "778-983-3365" }, { "Owner": "Diego C. Lawton", "Phone": "780-644-4957" }, { "Owner": "Anthony K. Evans", "Phone": "N/A" }, { "Owner": "Sue K. Gonzalez", "Phone": "647-746-4119" }, { "Owner": "Nancy J. Oneal", "Phone": "N/A" }, { "Owner": "Sirena C. Mack", "Phone": "905-983-3365" }, { "Owner": "Gloria K. Bowlby", "Phone": "N/A" }]; var values = data.data.val, divStr = "", idx = values[1].value; var svg = "<svg width='10px' height='10px'><path d='M-5,-5L5,-5L5,5L-5,5Z' fill='#5cbae6' transform='translate(5,5)'></path></svg>"; divStr = divStr + "<div style = 'margin: 15px 30px 0 10px'>" + svg + "<b style='margin-left:10px'>" + values[0].value + "</b></div>"; divStr = divStr + "<div style = 'margin: 5px 30px 0 30px'>" + values[2].name + "<span style = 'float: right'>" + values[2].value + "</span></div>"; divStr = divStr + "<div style = 'margin: 5px 30px 0 30px'>" + "Owner<span style = 'float: right'>" + exData[idx].Owner + "</span></div>"; divStr = divStr + "<div style = 'margin: 5px 30px 15px 30px'>" + "Phone<span style = 'float: right'>" + exData[idx].Phone + "</span></div>"; return new HTMLControl({ content: divStr }); } } };
         // console.log(xxjson);
         oPopOverPie = new Popover(this.settingsModel.dataset.values[2].popoverProps);
         oPopOverPie.connect(catVizFrame.getVizUid());
 
-        var colVizFrame = sap.ui.getCore().byId("container-chat---App--chartContainerVizFrame");
-        var oPopOverCol = sap.ui.getCore().byId("container-chat---App--idPopOverCol");
+        var colVizFrame = sap.ui.getCore().byId("container-chat---App--FPage5CategoryMgmt--chartContainerVizFrame");
+        var oPopOverCol = sap.ui.getCore().byId("container-chat---App--FPage5CategoryMgmt--idPopOverCol");
         oPopOverCol = new Popover(this.settingsModel.dataset.values[3].popoverProps);
         oPopOverCol.connect(colVizFrame.getVizUid());
       },
@@ -1099,9 +1122,13 @@ sap.ui.define(
         this.byId("pageContainer").to(this.getView().createId("page6"));
         this.byId("sideNavigation").setSelectedKey("page6");
       },
-      onCockpitPress: function (oEvent) {
-        this.byId("pageContainer").to(this.getView().createId("page3"));
-        this.byId("sideNavigation").setSelectedKey("page3");
+      onClusterExpPress: function (oEvent) {
+        this.byId("pageContainer").to(this.getView().createId("page7"));
+        this.byId("sideNavigation").setSelectedKey("page7");
+      },
+      onCatMgmtPress: function (oEvent) {
+        this.byId("pageContainer").to(this.getView().createId("page8"));
+        this.byId("sideNavigation").setSelectedKey("page8");
       },
 
       onNavItemSelect: function (oEvent) {
@@ -1114,7 +1141,7 @@ sap.ui.define(
           var oToolPage = this.byId("toolPage");
           var bSideExpanded = oToolPage.getSideExpanded();
 
-          this._setToggleButtonTooltip(bSideExpanded);
+          // this._setToggleButtonTooltip(bSideExpanded);
 
           oToolPage.setSideExpanded(!oToolPage.getSideExpanded());
         }
@@ -1123,12 +1150,12 @@ sap.ui.define(
       onSideNavMenuButtonPress: function () {
         var oToolPage = this.byId("toolPage");
         var bSideExpanded = oToolPage.getSideExpanded();
-        this._setToggleButtonTooltip(bSideExpanded);
+        // this._setToggleButtonTooltip(bSideExpanded);
         oToolPage.setSideExpanded(!oToolPage.getSideExpanded());
       },
 
       _setToggleButtonTooltip: function (bLarge) {
-        var oToggleButton = this.byId('sideNavigationToggleButton');
+        var oToggleButton = this.getView().byId('sideNavigationToggleButton');
         if (bLarge) {
           oToggleButton.setTooltip('Large Size Navigation');
         } else {

@@ -147,7 +147,9 @@
                             <ToolbarSpacer />
                         </headerContent>
                         <content>
-							<IllustratedMessage 
+							<!-- <mvc:XMLView viewName="chat.view.Page1Welcome" id="Page1Welcome" type="XML"></mvc:XMLView> -->
+							<core:Fragment fragmentName="chat.view.FPage1Welcome" id="FPage1Welcome" type="XML"/>
+							<!-- <IllustratedMessage 
 								enableVerticalResponsiveness="true"
 								title="Good day! Looks like you have completed all tasks! ☑️"
 								description=""
@@ -155,10 +157,11 @@
 								<additionalContent>
 									<Button icon="sap-icon://sys-help" press="onSearchPress" text="Need help with a new advisory?" class="sapUiTinyMargin"/>
 									<Button icon="sap-icon://search" press="onKBPress" text="Search up knowledge base" class="sapUiTinyMargin"/>
-									<Button icon="sap-icon://learning-assistant" press="onCockpitPress" text="Cluster Analysis to Advisories Performance" class="sapUiTinyMargin"/>
+									<Button icon="sap-icon://learning-assistant" press="onClusterExpPress" text="Explore the cluster analysis of advisories" class="sapUiTinyMargin"/>
+									<Button icon="sap-icon://learning-assistant" press="onCatMgmtPress" text="Manage categories with ease" class="sapUiTinyMargin"/>
 									<Button visible="false" icon="sap-icon://da" press="onJoule" text="Talk to Joule for Insights" class="sapUiTinyMargin"/>
 								</additionalContent>
-							</IllustratedMessage>
+							</IllustratedMessage> -->
                         </content>
                         <footer>
                             <OverflowToolbar height="auto" width="100%">
@@ -183,87 +186,7 @@
                             <!-- <Button icon="sap-icon://delete" tooltip="{i18n>delete}" press=".onDeleteChat" binding="{/deleteChatSession(...)}" /> -->
                         </headerContent>
                         <content>
-							<MessageStrip
-								text="The search tool is powered by the in-database embeddings from SAP HANA Cloud."
-								showIcon="true"
-								customIcon="sap-icon://search"
-								showCloseButton="true"
-								class="sapUiTinyMarginBottom">
-							</MessageStrip>
-                            <OverflowToolbar height="auto" width="100%">
-                                <ToolbarSpacer />
-                                <FeedInput
-                                    showIcon="true"
-                                    icon="sap-icon://ai"
-                                    placeholder="Enter a search term that is related to the request you're working on..."
-                                    growing="false"
-                                    rows="3"
-                                    post=".onEmbedHANASimilaritySearch"
-                                    enabled="{ui>/enabled}"
-                                    class="sapUiTinyMarginTopBottom"
-                                    binding="{/getAiResponse(...)}" />
-                                <ToolbarSpacer />
-                            </OverflowToolbar>
-                            <!-- <List
-                                showSeparators="Inner"
-                                items="{test>/similarities}"> -->
-                            	<f:GridList
-                                    id="gridList"
-                                    headerText=""
-                                    items="{search>/similarities}"
-                                    delete="onDelete"
-                                    class="sapUiResponsiveContentPadding">
-                                    <f:customLayout>
-                                        <grid:GridBasicLayout gridTemplateColumns="repeat(auto-fit, minmax(20rem, 1fr))" gridGap="0.5rem" />
-										<!-- <grid:GridBoxLayout boxWidth="15rem" /> -->
-                                    </f:customLayout>
-                                <!-- <items> -->
-                                    <f:GridListItem
-                                        press="onGridListItemPressForProjectDetails"
-                                        highlight="Information"
-                                        type="Active">
-                                    <VBox height="100%" justifyContent="SpaceBetween">
-                                        <layoutData>
-                                            <FlexItemData growFactor="1" shrinkFactor="0" /><!-- Don't shrink below minimum size. Fill space if available. -->
-                                        </layoutData>
-                                        <VBox class="sapUiSmallMargin">
-											<Title text="Request #{search>project_number}" wrapping="true" />
-                                            <!-- <HBox justifyContent="SpaceBetween">
-                                                <core:Icon
-                                                    src="sap-icon://da"
-                                                    size="2.625rem"
-                                                    color="Default"
-                                                    class="sapUiTinyMarginBottom" />
-                                                <ObjectStatus text="{search>SIMILARITY}" state="Success" />
-                                            </HBox> -->
-											<!-- <Text text="{search>TEXT}" wrapping="true" /> -->
-											<ExpandableText class="sapUiTinyMarginBottom sapUiTinyMarginTop" text="{search>TEXT}" overflowMode="Popover" />
-											<HBox alignItems="Center">
-												<Label text="Similarity score:" wrapping="true" />
-												<tnt:InfoLabel text="{path: 'search>SIMILARITY', formatter: '.formatMatchingScore'}" colorScheme="{path: 'search>SIMILARITY', formatter: '.formatMatchingScoreColor'}" />
-											</HBox>
-                                        </VBox>
-										
-										<OverflowToolbar design="Solid" class="sapContrast">
-											<Button icon="sap-icon://hint" type="Transparent" press="onCoinStar"/>
-											<ToolbarSpacer />
-											<Button icon="sap-icon://add-favorite" type="Transparent" press="onAddFav"/>
-											<Button icon="sap-icon://copy" type="Transparent" press="onCopy"/>
-											<Button icon="sap-icon://call" type="Transparent" press="onCall"/>
-										</OverflowToolbar>
-                                    </VBox>
-                                </f:GridListItem>
-                                <!-- </items> -->
-                                <f:noData>
-                                    <IllustratedMessage 
-                                        enableVerticalResponsiveness="true"
-                                        title="What would you like to search today?"
-                                        description="SAP HANA Embeddings"
-                                        illustrationType="sapIllus-NoSearchResults" />
-                                </f:noData>
-                                </f:GridList>
-                            <!-- </List> -->
-								
+							<core:Fragment fragmentName="chat.view.FPage2AdvisoryBuddy" id="FPage2AdvisoryBuddy" type="XML"/>
                         </content>
                         <footer>
                             <!-- <OverflowToolbar height="auto" width="100%">
@@ -597,44 +520,6 @@
                             </OverflowToolbar>
                         </footer>
                     </Page>
-					<Page id="page5" floatingFooter="false" busy="{ui>/busy}" busyIndicatorDelay="0">
-                        <headerContent>
-                            <Title text="Knowledge Base" class="sapUiSmallMargin"/>
-                            <ToolbarSpacer />
-                        </headerContent>
-                        <content>
-                            <Table id="productsTable"
-								items="{projects>/all_projects}"
-								headerText="">
-								<columns>
-									<Column id="productCol" width="12em"><Text text="Request" /></Column>
-									<Column id="supplierCol" minScreenWidth="Tablet" demandPopin="true"><Text text="Details" /></Column>
-									<Column id="dimensionsCol" minScreenWidth="Tablet" demandPopin="true" hAlign="End"><Text text="Remarks" /></Column>
-								</columns>
-								<items>
-									<ColumnListItem
-										type="Active"
-										vAlign="Middle"
-										navigated="{
-												parts: [
-													'settings>/navigatedItem',
-													'projects>project_number'
-												],
-												formatter: '.isNavigated'
-											}"
-										press="onKBProjectPress">
-										<cells>
-											<ObjectIdentifier title="ID #{projects>project_number}" text="{projects>project_date}" />
-											<ObjectIdentifier title="{projects>topic}" text="{projects>solution}" />
-											<Text text="{projects>comment} by {projects>architect}" />
-										</cells>
-									</ColumnListItem>
-								</items>
-							</Table>
-                        </content>
-                        <footer>
-                        </footer>
-                    </Page>
 					<Page id="page6" floatingFooter="false" busy="{ui>/busy}" busyIndicatorDelay="0">
                         <headerContent>
                             <Title text="Knowledge Base" class="sapUiSmallMargin"/>
@@ -644,76 +529,15 @@
 							<SearchField id="state" placeholder="Enter project/request ID..." change=".onKBSearch" width="55%"/>
                         </headerContent>
                         <content>
-							<List
-								id="idList"
-								items="{projects>/all_projects}"
-								selectionChange=".onKBSelectionChange"
-								growing="true"
-								growingThreshold="50"
-								includeItemInSelection="true">
-								<infoToolbar>
-									<OverflowToolbar visible="false" id="idInfoToolbar">
-										<Label id="idFilterLabel" />
-									</OverflowToolbar>
-								</infoToolbar>
-								<!-- <StandardListItem
-									title="ID #{projects>project_number}\n{projects>solution}"
-									description="{projects>topic}"
-									icon="sap-icon://accept"
-									iconDensityAware="false"
-									iconInset="false"
-									highlight="Information"
-									info="Information"
-									wrapping="true"
-									wrapCharLimit="100" /> -->
-								<ObjectListItem
-									title="{projects>topic}"
-									type="Active"
-									press="onKBListItemPress"
-									number="{projects>project_number}"
-									numberUnit="Request ID"
-									>
-									<markers>
-										<ObjectMarker type="Favorite" />
-										<ObjectMarker type="Flagged" />
-									</markers>
-									<firstStatus>
-										<ObjectStatus
-											text="{projects>architect}"
-											state="Success" />
-									</firstStatus>
-									<ObjectAttribute class="sapMTextWrap" title="Solution" text="{projects>solution}" />
-									<ObjectAttribute class="sapMTextWrap" title="" text="{
-										path: 'projects>project_date',
-										type: 'sap.ui.model.type.Date',
-										formatOptions: {
-											style: 'medium',
-											source: {
-												pattern: 'EEE, dd MMM yyyy HH:mm:ss zzz'
-											}
-										}
-									}" />
-								</ObjectListItem>
-							</List>
-
+							<core:Fragment fragmentName="chat.view.FPage3KnowledgeBase" id="FPage3KnowledgeBase" type="XML"/>
                         </content>
                         <footer>
                         </footer>
                     </Page>
 					<Page id="page7" floatingFooter="false" busy="{ui>/busy}" busyIndicatorDelay="0">
-						<!-- <IllustratedMessage
-							id="im"
-							illustrationSize="Auto"
-							illustrationType="sapIllus-SearchEarth">
-							<additionalContent>
-								<Button text="Action (optional)" />
-							</additionalContent>
-						</IllustratedMessage> -->
                         <headerContent>
                             <Title text="Cluster Exploration" class="sapUiSmallMargin"/>
                             <ToolbarSpacer />
-                            <!-- <Button icon="sap-icon://delete" tooltip="{i18n>delete}" press=".onDeleteChat" binding="{/deleteChatSession(...)}" />
-                            <Button icon="sap-icon://save" tooltip="{i18n>delete}" press=".onTest" /> -->
 							<Label text="Auto Refresh:"/>
 							<Switch change="onClusterExpAutoRefresh" state="false">
 								<layoutData>
@@ -722,42 +546,7 @@
 							</Switch>
                         </headerContent>
                         <content>
-
-						<!-- <GenericTile class="sapUiTinyMarginBegin sapUiTinyMarginTop tileLayout" header="Right click to open in new tab"
-							subheader="Link tile" press="onPress" url="https://www.sap.com/" frameType="TwoByOne">
-							<TileContent>
-								<ImageContent src="test-resources/sap/m/demokit/sample/GenericTileAsLaunchTile/images/SAPLogoLargeTile_28px_height.png" />
-							</TileContent>
-						</GenericTile> -->
-						<!-- <Title class="sapUiSmallMargin" text=""></Title> -->
-						<MessageStrip
-							visible="false"
-							text="Below are some insights to your advisory journey! Your last adjustment to your team's learning plan was on Dec 2024."
-							showIcon="true"
-							customIcon="sap-icon://ai"
-							showCloseButton="true"
-							class="sapUiTinyMargin">
-						</MessageStrip>
-							<f:Card id="scatterCard" width="95%" height="800px" class="sapUiTinyMarginBegin sapUiTinyMarginTop sapUiTinyMarginEnd">
-								<f:header>
-									<card:Header title="Cluster Analysis of Trending Cluster Categories" subtitle="Grouping &amp; Comparing Advisories Requests by Cluster" />
-								</f:header>
-								<f:content>
-									<html:iframe id="chart" src="cluster_category_analysis.html" style="-webkit-transform: scale(1); transform: scale(1); -webkit-transform-origin: 0 0; transform-origin: 0 0;" frameBorder="0" height="900px" width="100%" scrolling="yes"/>
-								</f:content>
-							</f:Card>
-
-							<f:Card id="clusterBarCard" height="800px" width="100%" class="sapUiTinyMarginBegin sapUiTinyMarginTop sapUiTinyMarginEnd">
-									<f:layoutData>
-										<f:GridContainerItemLayoutData columns="10" />
-									</f:layoutData>
-									<f:header>
-										<card:Header title="Project Distribution by Cluster" subtitle="Breakdown of Projects by Architect" />
-									</f:header>
-									<f:content>
-										<html:iframe id="clusterExpertChart" src="cluster_project_by_expert.html" style="-webkit-transform: scale(1); transform: scale(1); -webkit-transform-origin: 0 0; transform-origin: 0 0;" frameBorder="0" height="900px" width="100%" scrolling="yes"/>
-									</f:content>
-								</f:Card>
+							<core:Fragment fragmentName="chat.view.FPage4ClusterExp" id="FPage4ClusterExp" type="XML"/>
                         </content>
                         <footer>
                         </footer>
@@ -784,272 +573,7 @@
 							</Switch>
                         </headerContent>
                         <content>
-						<MessageStrip
-							visible="false"
-							text="Below are some insights to your advisory journey! Your last adjustment to your team's learning plan was on Dec 2024."
-							showIcon="true"
-							customIcon="sap-icon://ai"
-							showCloseButton="true"
-							class="sapUiTinyMargin">
-						</MessageStrip>
-							<f:GridContainer id="demoGrid" class="sapUiTinyMargin">
-								<f:Card id="pieCard" height="650px" width="100%" class="sapUiTinyMarginBegin sapUiTinyMarginTop sapUiTinyMarginEnd">
-									<f:layoutData>
-										<f:GridContainerItemLayoutData columns="6" />
-									</f:layoutData>
-									<f:header>
-										<card:Header title="Project Breakdown by Category" subtitle="Number of Projects in Each Category" />
-									</f:header>
-									<f:content>
-										<suite:ChartContainer
-											id="piechartContainer"
-											showLegend="false"
-											showFullScreen="true"
-											showPersonalization="false"
-											autoAdjustHeight="false"
-											personalizationPress="attachPersonalizationPress"
-											contentChange="attachContentChange"
-											title="">
-											<suite:content>
-												<suite:ChartContainerContent
-													icon="sap-icon://line-chart"
-													title="Line Chart">
-													<suite:content>
-														<viz:VizFrame id="piechartContainerVizFrame" height="500px" width="100%"
-															uiConfig="{applicationSet:'fiori'}">
-															<viz:dependents>
-																<viz:Popover id="idPopOverPie"></viz:Popover>
-															</viz:dependents>
-														</viz:VizFrame>
-													</suite:content>
-												</suite:ChartContainerContent>
-											</suite:content>
-											<suite:toolbar>
-												<OverflowToolbar id="appToolbar">
-													<Label id="pieRefreshLabel" text=""/>
-													<ToolbarSpacer/>
-													<!-- <Button id="btnAction2" text="CustomAction" type="Transparent" press="onCustomActionPress"></Button> -->
-													<suite:ChartContainerToolbarPlaceholder></suite:ChartContainerToolbarPlaceholder>
-												</OverflowToolbar>
-											</suite:toolbar>
-										</suite:ChartContainer>
-									</f:content>
-								</f:Card>
-
-
-								<f:Card id="columnCard" height="650px" width="100%" class="sapUiTinyMarginBegin sapUiTinyMarginTop sapUiTinyMarginEnd">
-									<f:layoutData>
-										<f:GridContainerItemLayoutData columns="6" />
-									</f:layoutData>
-									<f:header>
-										<card:Header title="Project Workload by Expert and Category" subtitle="Number of Projects Handled by Each Expert, Categorized by Project Type" />
-									</f:header>
-									<f:content>
-										<suite:ChartContainer
-											id="chartContainer"
-											showLegend="false"
-											showFullScreen="true"
-											showPersonalization="false"
-											autoAdjustHeight="false"
-											personalizationPress="attachPersonalizationPress"
-											contentChange="attachContentChange"
-											title="">
-											<suite:dimensionSelectors>
-												<Select id="idoSelect1" change="onColChartHandleSelectionChange" 
-												valueState="Information" valueStateText="Chart results will be filtered by the selected expert.">
-													<core:Item key="Archie" text="Projects by Archie"/>
-													<core:Item key="Chris" text="Projects by Chris"/>
-													<core:Item key="Emma" text="Projects by Emma"/>
-													<core:Item key="Jules" text="Projects by Jules"/>
-													<core:Item key="Leonard" text="Projects by Leonard"/>
-													<core:Item key="Mary" text="Projects by Mary"/>
-													<core:Item key="Sandra" text="Projects by Sandra"/>
-												</Select>
-											</suite:dimensionSelectors>
-											<suite:content>
-												<suite:ChartContainerContent
-													icon="sap-icon://line-chart"
-													title="Line Chart">
-													<suite:content>
-														<viz:VizFrame id="chartContainerVizFrame" height="500px" width=""
-															uiConfig="{applicationSet:'fiori'}">
-															<viz:dependents>
-																<viz:Popover id="idPopOverCol"></viz:Popover>
-															</viz:dependents>
-														</viz:VizFrame>
-													</suite:content>
-												</suite:ChartContainerContent>
-											</suite:content>
-											<suite:toolbar>
-												<OverflowToolbar>
-													<ToolbarSpacer/>
-													<Label id="colRefreshLabel" text=""/>
-													<!-- <Button id="btnAction2" text="CustomAction" type="Transparent" press="onCustomActionPress"></Button> -->
-													<suite:ChartContainerToolbarPlaceholder></suite:ChartContainerToolbarPlaceholder>
-												</OverflowToolbar>
-											</suite:toolbar>
-										</suite:ChartContainer>
-									</f:content>
-								</f:Card>
-
-								
-
-
-							</f:GridContainer>
-
-							<f:Card id="categoryManagementCard" height="600px" width="95%" class="sapUiTinyMarginBegin sapUiTinyMarginTop sapUiTinyMarginEnd">
-									<f:layoutData>
-										<f:GridContainerItemLayoutData columns="10" />
-									</f:layoutData>
-									<f:header>
-										<card:Header title="Category Management" subtitle="Update Category Labels &amp; Descriptions" />
-									</f:header>
-									<f:content>
-									<Table id="editableTable" items="{categorymgmt>/clusters}">
-										<headerToolbar>
-											<OverflowToolbar id="otbSubheader">
-												<Label id="catTableRefreshLabel" text=""/>
-												<ToolbarSpacer />
-												<!-- <Button id="editButton" text="Edit" type="Transparent"
-													press="onEdit" /> -->
-												<!-- <Button id="saveButton" text="Save" icon="sap-icon://save" type="Transparent"
-													press="onSave" visible="true" /> -->
-												<!-- <Button id="cancelButton" text="Cancel" type="Transparent"
-													press="onCancel" visible="false" /> -->
-												<Button text="Edit" press="onCatMgmtEdit" visible="{= ${categorymgmt>/isEditMode} === false }" />
-												<Button text="Cancel" press="onCatMgmtCancel" visible="{= ${categorymgmt>/isEditMode} === true }" />
-												<Button text="Save" press="onCatMgmtSave" visible="{= ${categorymgmt>/isEditMode} === true }" />
-											</OverflowToolbar>
-										</headerToolbar>
-										<columns>
-											<Column width="3em"><Text text="ID" /></Column>
-											<Column width="20em"><Text text="Description" /></Column>
-											<Column width="12em"><Text text="Category" /></Column>
-										</columns>
-										<items>
-											<ColumnListItem>
-												<cells>
-													<!-- Cluster ID (Non-editable) -->
-													<Text text="{categorymgmt>index}" />
-													<!-- Cluster Description (Editable) -->
-													<!-- <Text text="{cluster>cluster_description}" /> -->
-													<!-- <Text text="{categorymgmt>cluster_description}" visible="{= ${categorymgmt>/isEditMode} === false }" /> -->
-													
-													<!-- Category Label (Editable) -->
-													<!-- <Text text="{cluster>category_label}" /> -->
-													<!-- <Text text="{categorymgmt>category_label}" visible="{= ${categorymgmt>/isEditMode} === false }" /> -->
-													<Input width="" value="{categorymgmt>category_descr}" editable="{= ${categorymgmt>/isEditMode} === true }" visible="true"/>
-													<Input value="{categorymgmt>category_label}" editable="{= ${categorymgmt>/isEditMode} === true }" visible="true" />
-													
-
-												</cells>
-											</ColumnListItem>
-										</items>
-									</Table>
-
-									</f:content>
-								</f:Card>
-
-
-							
-
-							
-
-							
-
-							
-
-							
-
-                            	<!-- <f:Card width="300px" class="sapUiMediumMarginBegin sapUiTinyMarginTop">
-									<f:header>
-										<card:Header title="Cases Assigned to Me" subtitle="For Today" />
-									</f:header>
-									<f:content>
-										<IllustratedMessage illustrationType="sapIllus-NoActivities">
-											<additionalContent>
-												<Button text="Add Activity" />
-											</additionalContent>
-										</IllustratedMessage>
-									</f:content>
-								</f:Card>
-									<f:Card width="300px" class="sapUiMediumMarginBegin sapUiTinyMarginTop">
-									<f:header>
-										<card:Header title="Inbox" />
-									</f:header>
-									<f:content>
-										<IllustratedMessage illustrationType="sapIllus-NoMail" />
-									</f:content>
-								</f:Card> -->
-
-							<f:Card visible="false" width="95%" class="sapUiTinyMarginBegin sapUiTinyMarginTop sapUiTinyMarginEnd">
-								<f:header>
-									<card:Header title="Learning Plan Assignment" subtitle="Based on Trending Cluster Topics" />
-								</f:header>
-								<f:content>
-									<VBox>
-									<Select
-										class="sapUiSmallMargin"
-										enabled="true"
-										editable="true"
-										forceSelection="false"
-										selectedKey=""
-										items="">
-										<core:Item key="01" text="Archie" />
-										<core:Item key="02" text="Jules" />
-										<core:Item key="03" text="Leonard" />
-									</Select>
-										<MessageStrip
-											text="Drag &amp; drop cluster topics to your learning plan!"
-											showIcon="true"
-											customIcon="sap-icon://ai"
-											showCloseButton="true"
-											class="sapUiTinyMargin">
-										</MessageStrip>
-										<HBox renderType="Bare">
-										
-											
-											<VBox>
-											<Title class="sapUiSmallMargin" text="New Cluster Topics"/>
-											<List
-												id="list1"
-												class="sapUiSmallMargin"
-												width="100%"
-												items="{ path: 'grid>/' }">
-												<StandardListItem title="{grid>title}" />
-											</List>
-											</VBox>
-											<VBox width="100%">
-												<Title class="sapUiSmallMargin" text="Team's Learning Plan"/>
-											<f:GridContainer
-												id="grid1"
-												class="sapUiSmallMargin"
-												width="100%"
-												snapToRow="true"
-												items="{ path: 'grid>/' }">
-												<f:layout>
-													<f:GridContainerSettings rowSize="84px" columnSize="84px" gap="8px" />
-												</f:layout>
-												<f:layoutXS>
-													<f:GridContainerSettings rowSize="70px" columnSize="70px" gap="8px" />
-												</f:layoutXS>
-
-												<f:Card>
-													<f:layoutData>
-														<f:GridContainerItemLayoutData minRows="{grid>rows}" columns="{grid>columns}" />
-													</f:layoutData>
-													<f:header>
-														<card:Header title="{grid>title}" />
-													</f:header>
-												</f:Card>
-											</f:GridContainer>
-											</VBox>
-										</HBox>
-									</VBox>
-								</f:content>
-							</f:Card>
-
-								
+							<core:Fragment fragmentName="chat.view.FPage5CategoryMgmt" id="FPage5CategoryMgmt" type="XML"/>
                         </content>
                         <footer>
                         </footer>
