@@ -10,8 +10,8 @@ quick poc
 - cf restart ui5node-poc-embedding
 
 todo
-- decouple env variables
-- covert to cap if needed, else works fine with standalone custom ui5 app
+- [done] decouple env variables
+- convert to cap if needed, else works fine with standalone custom ui5 app
 
 note:
 - [done] api is directly hardcoded for testing purpose with code generated from api clients (postman/bruno)

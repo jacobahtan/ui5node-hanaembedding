@@ -743,7 +743,7 @@ sap.ui.define(
           })
           .catch((error) => {
             console.error("Error updating category data:", error);
-            MessageToast.show("Uh-oh, seems like there's some issue with the API call to update.");
+            MessageToast.show("Uh-oh, seems like there's some issue with the API call to update. Please try again.");
             this.setAppBusy(false);
           });
       },
@@ -1183,7 +1183,7 @@ sap.ui.define(
             // MessageToast.show("Screen width is corresponding to Phone");
             // console.log(document.getElementById("container-chat---App--demoGrid-item-container-chat---App--pieCard"));
             // document.getElementById("container-chat---App--demoGrid-item-container-chat---App--pieCard").style.gridArea="span 7 / span 5";
-            this.byId("scatterCard").setHeight("600px");
+            this.byId("FPage4ClusterExp--scatterCard").setHeight("600px");
             break;
           default:
             break;

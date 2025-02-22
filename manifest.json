@@ -25,12 +25,12 @@
   "sap.ui": {
     "technology": "UI5",
     "icons": {
-      "icon": "",
-      "favIcon": "",
-      "phone": "",
-      "phone@2": "",
-      "tablet": "",
-      "tablet@2": ""
+      "icon": "https://cdn-icons-png.flaticon.com/256/16809/16809893.png",
+      "favIcon": "https://cdn-icons-png.flaticon.com/256/16809/16809893.png",
+      "phone": "https://cdn-icons-png.flaticon.com/256/16809/16809893.png",
+      "phone@2": "https://cdn-icons-png.flaticon.com/256/16809/16809893.png",
+      "tablet": "https://cdn-icons-png.flaticon.com/256/16809/16809893.png",
+      "tablet@2": "https://cdn-icons-png.flaticon.com/256/16809/16809893.png"
     },
     "deviceTypes": {
       "desktop": true,
